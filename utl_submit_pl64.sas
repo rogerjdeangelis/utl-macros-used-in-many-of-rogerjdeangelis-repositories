@@ -1,0 +1,34 @@
+%macro utl_submit_pl64(pgm)/des="bactic separated set of py commands";
+  * write the program to a temporary file;
+  filename pl_pgm "%sysfunc(pathname(work))/pl_pgm.pl" lrecl=32766 recfm=v;
+  data _null_;
+    length pgm  $32755 cmd $255;
+    file pl_pgm ;
+    pgm=&pgm;
+    semi=countc(pgm,'`');
+      do idx=1 to semi;
+        cmd=cats(scan(pgm,idx,'`'));
+        put cmd $char96.;
+        putlog cmd $char96.;
+      end;
+  run;
+  run;quit;
+  %let _loc=%sysfunc(pathname(pl_pgm));
+  %put &_loc;
+  filename rut pipe "D:\Dwimperl\perl\bin\perl &_loc > d:/log/__log.txt";
+  data _null_;
+    file print;
+    infile rut;
+    input;
+    put _infile_;
+  run;quit;
+  filename rut clear;
+  filename pl_pgm clear;
+  data _null_;
+    infile "d:/log/__log.txt";
+    input;
+    put _infile_;
+  run;quit;
+%mend utl_submit_pl64;
+
+
