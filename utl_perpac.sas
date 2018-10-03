@@ -171,6 +171,34 @@ Python functions and code can be alsi be executed by mouse keys.
    title;                                                                                                                                                                                                                                               
    dm "out;top;";                                                                                                                                                                                                                                       
 %mend prtha;   
+%macro doendh / cmd;
+   store;note;notesubmit '%doendha;';
+   run;
+%mend doendh;
+
+%macro doendha;
+   filename clp clipbrd ;
+   data _null_;
+     retain lft rgt 0 ;
+     infile clp end=dne;
+     do until(dne);
+         input ;
+         lft=lft+count(upcase(_infile_),'%DO ');
+         lft=lft+count(upcase(_infile_),'%DO;');
+         rgt=rgt+count(upcase(_infile_),'%END;');
+         put lft= rgt=;
+     end;
+     lftrgt=lft - rgt;
+     abslftrgt=abs(lftrgt);
+     select;
+        when (lftrgt=0) putlog "**********************" // '%DO %END  match'  // "**********************";
+        when (lftrgt>0) putlog "**********************" // 'Missing ' lftrgt ' %END  '  // "**********************";
+        when (lftrgt<0) putlog "**********************" // 'Missing ' abslftrgt  ' %DO;  '  // "**********************";
+        otherwise;
+     end;
+   run;
+%mend doendha;
+
                                                                                                                                                                                                                                          
              
 %macro utlfkil
