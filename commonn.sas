@@ -1,0 +1,12 @@
+%macro commonn(var,action=init);
+   %if %upcase(&action) = INIT %then %do;
+      retain &var 0;
+      call symputx("varadr",put(addrlong(&var.),hex16.),"G");
+   %end;
+   %else %if "%upcase(&action)" = "PUT" %then %do;
+      call pokelong(put(&var,rb8.),"&varadr."x,8,8);
+   %end;
+   %else %if "%upcase(&action)" = "GET" %then %do;
+      &var = input(peekclong("&varadr."x,8),rb8.);
+   %end;
+%mend commonn;
