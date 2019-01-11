@@ -13,7 +13,7 @@
 
         proc sql;
           select
-            catx(' ',_name_,"as",lbl) into :rens separated by ","
+            catx(' ',_name_,"as",compress(lbl,'.')) into :rens separated by ","
           from
             (
              select
