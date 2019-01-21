@@ -18,6 +18,10 @@
 
 /*
 options nomprint nosymbolgen nomlogic;
+
+filename f URL "https://www.mini.pw.edu.pl/~bjablons/SASpublic/array.sas";
+%include f / source2;
+filename f;
 */
 
 %macro barray(
@@ -42,6 +46,7 @@ vnames=N,  /* default=N, if set to Y then macroarray is builded based on variabl
 macarray=N,/* default=N, if set to Y then macro named array's name is compiled to create convinient envelope
               for multiple ampersands, e.g. call to %array(myArr[*] x1-x3 (4:6), macarray=N) will create
               %myArr(J) macro which will allow to extract "data" from macroarray like: %let x = %myArr(1);
+              or when used as second parameter (,17) allow to overwrite macroarrays value: %let %myArr(,17) = 42;
             */
 ds=,       /* use a dataset as a basis for macroarray's data, if used by default overwrites use of 'array' parameter,
               honors macarray= argument usage, dataset options are allowed, e.g. sashelp.class(obs=5)
@@ -66,7 +71,7 @@ vars=      /* list of variables used to create macroarrays from a dataset, list 
 
 /* CREATE ARRARY FROM STATEMENT */
 /* extract an array name */
-%let name = %unquote( %qscan( &array., 1, %str([ ]) ) );
+%let name = %unquote( %qscan( &array., 1, %str([{( )}]) ) );
 /* %put **&=array.**; */
 /* %put **&=name.**; */
 
@@ -118,15 +123,24 @@ DATA _NULL_ %str(;)
  IF NOT("&name." = "_") AND ("&macarray." = "Y" OR "&macarray." = "y")
  THEN
    CALL SYMPUTX("&mtext.",
-        '%MACRO ' !! "&name." !! '(J);' !!
-        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &J.) * (&J. LE &&&sysmacroname.HBOUND) ) %then &&&sysmacroname.&J.;' !!
+        '%MACRO ' !! "&name." !! '(J, I);' !!
+        '%local J I; %if %sysevalf(%superq(J) NE, boolean) %then %do;' !!
+        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &J.) * (&J. LE &&&sysmacroname.HBOUND) ) %then %do;&&&sysmacroname.&J.%end;' !!
         '%else %do;' !!
            /* put . for numeric out of range */
            IFC(not(UPCASE("&vnames.") = "Y") AND  VTYPE(&name.[LBOUND(&name.)])='N', '.', '') !!
           '%put WARNING:[Macroarray &sysmacroname.] Index &J. out of range.;' !!
-          '%put WARNING-[Macroarray &sysmacroname.] Shouls be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
+          '%put WARNING-[Macroarray &sysmacroname.] Should be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
           '%put WARNING-[Macroarray &sysmacroname.] Missing value is used.;' !!
         '%end;' !!
+        '%end;' !!
+        '%else %do; %if %sysevalf(%superq(I) NE, boolean) %then %do;' !!
+        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &I.) * (&I. LE &&&sysmacroname.HBOUND) ) %then %do;&sysmacroname.&I.%end;' !!
+        '%else %do;' !!
+          '%put ERROR:[Macroarray &sysmacroname.] Index &I. out of range.;' !!
+          '%put ERROR-[Macroarray &sysmacroname.] Should be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
+        '%end;' !!
+        '%end; %end;' !!
         '%MEND;', 'G') %str(;)
  ELSE
    CALL SYMPUTX("&mtext.", ' ', 'G') %str(;)
@@ -196,13 +210,21 @@ RUN %str(;)
         &v._i&i.+1%str(;) CALL SYMPUTX(CATS("&a.", put(&v._i&i., best32.)), &v., 'G') %str(;)
       END %str(;)
       CALL SYMPUTX("&a.mtext",
-        '%MACRO ' !! "&a." !! '(J);' !!
-        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &J.) * (&J. LE &&&sysmacroname.HBOUND) ) %then &&&sysmacroname.&J.;' !!
+        '%MACRO ' !! "&a." !! '(J, I);' !!
+        '%local J I; %if %sysevalf(%superq(J) NE, boolean) %then %do;' !!
+        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &J.) * (&J. LE &&&sysmacroname.HBOUND) ) %then %do;&&&sysmacroname.&J.%end;' !!
         '%else %do;' !! IFC(VTYPE(&v.)='N','.','') !! /* put . for numeric out of range */
           '%put WARNING:[Macroarray &sysmacroname.] Index &J. out of range.;' !!
           '%put WARNING-[Macroarray &sysmacroname.] Shouls be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
           '%put WARNING-[Macroarray &sysmacroname.] Missing value is used.;' !!
         '%end;' !!
+        '%end;' !!
+        '%else %do; %if %sysevalf(%superq(I) NE, boolean) %then %do;' !!
+        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &I.) * (&I. LE &&&sysmacroname.HBOUND) ) %then %do;&sysmacroname.&I.%end;' !!
+        '%else %do;' !!
+          '%put ERROR:[Macroarray &sysmacroname.] Index &I. out of range.;' !!
+          '%put ERROR-[Macroarray &sysmacroname.] Shouls be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
+        '%end; %end;' !!
         '%MEND;', 'G') %str(;)
       ;
     %end;
@@ -221,13 +243,21 @@ RUN %str(;)
       CALL SYMPUTX("&a.HBOUND", &v._i&i., 'G') %str(;)
       CALL SYMPUTX("&a.N"     , &v._i&i., 'G') %str(;)
       CALL SYMPUTX("&a.mtext",
-        '%MACRO ' !! "&a." !! '(J);' !!
+        '%MACRO ' !! "&a." !! '(J, I);' !!
+        '%local J I; %if %sysevalf(%superq(J) NE, boolean) %then %do;' !!
         '%if %sysevalf( (&&&sysmacroname.LBOUND LE &J.) * (&J. LE &&&sysmacroname.HBOUND) ) %then &&&sysmacroname.&J.;' !!
         '%else %do;' !! IFC(VTYPE(&v.)='N','.','') !! /* put . for numeric out of range */
           '%put WARNING:[Macroarray &sysmacroname.] Index &J. out of range.;' !!
           '%put WARNING-[Macroarray &sysmacroname.] Shouls be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
           '%put WARNING-[Macroarray &sysmacroname.] Missing value is used.;' !!
         '%end;' !!
+        '%end;' !!
+        '%else %do; %if %sysevalf(%superq(I) NE, boolean) %then %do;' !!
+        '%if %sysevalf( (&&&sysmacroname.LBOUND LE &I.) * (&I. LE &&&sysmacroname.HBOUND) ) %then %do;&sysmacroname.&I.%end;' !!
+        '%else %do;' !!
+          '%put ERROR:[Macroarray &sysmacroname.] Index &I. out of range.;' !!
+          '%put ERROR-[Macroarray &sysmacroname.] Shouls be between &&&sysmacroname.LBOUND and &&&sysmacroname.HBOUND;' !!
+        '%end; %end;' !!
         '%MEND;', 'G') %str(;)
       ;
     %end;
@@ -283,25 +313,34 @@ RUN %str(;)
 /* 1) creating an array like "statement" */
 /*
 
-  %barray(z[*] x1-x5 (1:5))
+  %array(a[*] x1-x5 (1:5))
   %put _user_;
 
-  %barray(b[5] (5*17))
+  %array(aa{*} x1-x5 (1:5))
   %put _user_;
 
-  %barray(c[3] $ 10 ("a A" "b,B" "c;C"))
+  %array(aaa(*) x1-x5 (1:5))
+  %put _user_;
+
+  %array(aaaa x1-x5 (1:5))
+  %put _user_;
+
+  %array(b[5] (5*17))
+  %put _user_;
+
+  %array(c[3] $ 10 ("a A" "b,B" "c;C"))
   %put _user_;
 
 */
 
 /* if range starts < 0 then it is shifted to 0 */
 /* in case when range is from 1 to M then macrovariable <arrayname>N = M
-   in case when fange is different the <arrayname>N returns number of
+   in case when range is different the <arrayname>N returns number of
    elements in the array (Hbound - Lbound + 1)
 */
 /*
 
-  %barray(d[-2:2] $ ("a" "b" "c" "d" "e"))
+  %array(d[-2:2] $ ("a" "b" "c" "d" "e"))
   %put &=dLBOUND. &=dHBOUND. &=dN.;
   %put &=d0. &=d1. &=d2. &=d3. &=d4.;
 
@@ -311,19 +350,19 @@ RUN %str(;)
 /* you can use an iterator in a function, as usual it is _I_ */
 /*
 
-  %barray(e[-3:3] $, function = "A" )
+  %array(e[-3:3] $, function = "A" )
   %put &=eLBOUND. &=eHBOUND. &=eN.;
   %put &=e0. &=e1. &=e2. &=e3. &=e4. &=e5. &=e6.;
 
-  %barray(f[-3:3], function = (2**_I_) )
+  %array(f[-3:3], function = (2**_I_) )
   %put &=fLBOUND. &=fHBOUND. &=fN.;
   %put _user_;
 
-  %barray(g[1:10], function = ranuni(123) )
+  %array(g[1:10], function = ranuni(123) )
   %put &=gLBOUND. &=gHBOUND. &=gN.;
   %put _user_;
 
-  %barray(gg[0:45] $ 11, function = put(intnx("MONTH", '1jun2018'd, _I_, "E"), yymmn.))
+  %array(gg[0:45] $ 11, function = put(intnx("MONTH", '1jun2018'd, _I_, "E"), yymmn.))
   %put &=ggLBOUND. &=ggHBOUND. &=ggN.;
   %put _user_;
 
@@ -332,87 +371,81 @@ RUN %str(;)
 /* need setup something before? */
 /*
 
-  %barray(h[1:10], function = rand('Uniform'), before = call streaminit(123) )
+  %array(h[1:10], function = rand('Uniform'), before = call streaminit(123) )
   %put _user_;
-
-  GLOBAL H1 0.5817000773
-  GLOBAL H10 0.0798305166
-  GLOBAL H2 0.0356216603
-  GLOBAL H3 0.0781806207
-  GLOBAL H4 0.3878454913
-  GLOBAL H5 0.3291709244
-  GLOBAL H6 0.3615948586
-  GLOBAL H7 0.3375946083
-  GLOBAL H8 0.1692008818
-  GLOBAL H9 0.0567010401
-  GLOBAL HHBOUND 10
-  GLOBAL HLBOUND 1
-  GLOBAL HN 10
 
 */
 
 /* Fibonacci series */
 /*
 
-  %barray(i[1:30] (30*0), function =  ifn(_I_ < 2, 1, sum(i[max(_I_-2,1)],i[max(_I_-1,2)]) )  )
+  %array(i[1:30] (30*0), function =  ifn(_I_ < 2, 1, sum(i[max(_I_-2,1)],i[max(_I_-1,2)]) )  )
   %put _user_;
 
 */
 
-/* Upcase Letters options sasautos="c:/oto"; */
+/* Upcase Letters */
 /*
 
-  %barray(UL[26] $, function = byte(rank("A")+_I_-1) )
+  %array(UL[26] $, function = byte(rank("A")+_I_-1) )
   %put _user_;
-
-  GLOBAL UL1 A
-  GLOBAL UL2 B
-  GLOBAL UL3 C
-  ....
-  GLOBAL UL24 X
-  GLOBAL UL25 Y
-  GLOBAL UL26 Z
-  GLOBAL ULHBOUND 26
-  GLOBAL ULLBOUND 1
-  GLOBAL ULN 26
 
 */
 
-/* lowcase letters, with macroarray=Y */
+/* lowcase letters, with macroarray=Y
+   input mode is also supported with M=I [Mode = Input]
+*/
 /*
 
-  %barray(ll[26] $, function = byte(rank("a")+_I_-1), macarray=Y)
+  %array(ll[26] $, function = byte(rank("a")+_I_-1), macarray=Y)
   %put _user_;
   %let xxx = %ll(2);
+
   %put *%ll(&llLBOUND.)*&=xxx.*%ll(3)*%ll(4)*%ll(5)*...*%ll(&llHBOUND.)*;
   %put *%ll(555)*;
+
+  %put *%ll(2)*;
+  %let %ll(,2) = bbb;
+  %put *%ll(2)*;
+
+  %let %ll(,555) = bbb;
+
+  %*deleteMacArray(r);
+  %*deleteMacArray(d);
+  %*deleteMacArray(g);
+  %*deleteMacArray(h);
+  %*deleteMacArray(ll);
+  %*deleteMacArray(ul);
+  %put _user_;
+
 */
 
 /* how to use vnames=Y*/
 /*
 
-  %barray(R R1978-R1982)
+  %array(R R1978-R1982)
   %put _user_;
 
-  %barray(R R1978-R1982 (78:82))
+  %array(R R1978-R1982 (78:82))
   %put _user_;
 
-  %barray(R R1978-R1982 (78:82), vnames=Y)
+  %array(R R1978-R1982 (78:82), vnames=Y)
   %put _user_;
 
-  %barray(R R1978-R1982, vnames=Y)
+  %array(R R1978-R1982, vnames=Y)
   %put _user_;
 
 */
 
 
+
 /* "no name" array i.e. the _[*] array */
 /*
 
-  %barray(_[*] x1-x5 (1:5))
+  %array(_[*] x1-x5 (1:5))
   %put _user_;
 
-  %barray(_[*] p q r s (4*42))
+  %array(_[*] p q r s (4*42))
   %put _user_;
 
 */
@@ -420,7 +453,7 @@ RUN %str(;)
 /* if no variables added than use _1 _2 ... _N */
 /*
 
-  %barray(_[4] (-1 -2 -3 -4))
+  %array(_[4] (-1 -2 -3 -4))
   %put _user_;
 
 */
@@ -432,7 +465,7 @@ RUN %str(;)
 
   data test;
   set sashelp.class;
-  %barray(ds[*] d1-d4 (4*17))
+  %array(ds[*] d1-d4 (4*17))
   a1 = &ds1.;
   a2 = &ds2.;
   a3 = &ds3.;
@@ -441,7 +474,7 @@ RUN %str(;)
 
   data test;
   set sashelp.class;
-  %barray(_[*] j k l m (4*17))
+  %array(_[*] j k l m (4*17))
   a1 = &j.;
   a2 = &k.;
   a3 = &l.;
@@ -450,7 +483,7 @@ RUN %str(;)
 
   data test;
   set sashelp.class;
-  %barray(alpha[*] j k l m (101 102 103 104), macarray=Y)
+  %array(alpha[*] j k l m (101 102 103 104), macarray=Y)
   a1 = %alpha(1);
   a2 = %alpha(2);
   a3 = %alpha(3);
@@ -460,7 +493,7 @@ RUN %str(;)
 
   data test;
   set sashelp.class;
-  %barray(beta[*] j k l m (101 102 103 104), vnames=Y, macarray=Y)
+  %array(beta[*] j k l m (101 102 103 104), vnames=Y, macarray=Y)
   a1 = "%beta(1)";
   a2 = "%beta(2)";
   a3 = "%beta(3)";
@@ -470,7 +503,7 @@ RUN %str(;)
 
   data test;
   set sashelp.class;
-  %barray(gamma[4] $ 12 ("101" "102" "103" "104"), macarray=Y)
+  %array(gamma[4] $ 12 ("101" "102" "103" "104"), macarray=Y)
   a1 = "%gamma(1)";
   a2 = "%gamma(2)";
   a3 = "%gamma(3)";
@@ -483,7 +516,7 @@ RUN %str(;)
 /* 2) creating an array from a dataset                          */
 /*
 
-  %barray(ds = sashelp.class, vars = height weight age)
+  %array(ds = sashelp.class, vars = height weight age)
   %put _user_;
 
 */
@@ -498,10 +531,10 @@ RUN %str(;)
 */
 /*
 
-  %barray(ds = sashelp.class, vars = height#h weight weight|w age|)
+  %array(ds = sashelp.class, vars = height#h weight weight|w age|)
   %put _user_;
 
-  %barray(ds = sashelp.class, vars = height#h weight weight|w age|, macarray=Y)
+  %array(ds = sashelp.class, vars = height#h weight weight|w age|, macarray=Y)
   %put *%h(&hLBOUND.)**%h(2)**%h(&hHBOUND.)*;
 
 */
@@ -510,12 +543,12 @@ RUN %str(;)
 /* you can applay dataset options */
 /*
 
-  %barray(ds = sashelp.cars(obs=100 where=(Cylinders=6)), vars = Make| Type| Model, macarray=Y)
+  %array(ds = sashelp.cars(obs=100 where=(Cylinders=6)), vars = Make| Type| Model, macarray=Y)
   %put *%make(&makeLBOUND.)*%Model(2)*%Model(3)*%Model(4)*%type(&typeHBOUND.)*;
 
   data test;
   set sashelp.class;
-  %barray(ds = sashelp.cars, vars = Cylinders|, macarray=Y)
+  %array(ds = sashelp.cars, vars = Cylinders|, macarray=Y)
   a0 = %Cylinders(0);
   a1 = %Cylinders(1);
   a2 = %Cylinders(2);
