@@ -1308,3 +1308,32 @@ filename __dm clear;
     %macro cm / cmd;
           c ' ' '/*' first;c ' ' '*/' last;
     %mend cm;
+    
+    %macro sasbat /cmd des="highlight code type sas7bat on command line";
+   store;note;notesubmit '%sasbath;';
+%mend sasbat;
+
+%macro sasbath;
+  /* use your own delete file code or
+     %utlfkil(d:/log/__clp.sas);
+     %utlfkil(d:/log/__clp.log);
+     %utlfkil(d:/log/__clp.lst);
+  */
+  FILENAME clp clipbrd ;
+  DATA _NULL_;
+    INFILE clp;
+    INPUT;
+    file "d:/log/__clp.sas";
+    put _infile_;
+  RUN;quit;
+  filename sin pipe %sysfunc(compbl("sas -sysin d:/log/__clp.sas
+        -log d:/log/__clp.log -autoexec c:\oto\tut_oto.sas
+       -print d:/log/__clp.lst -config \cfg\sasv9.cfg -sasautos c:/oto"));
+   data _null_;
+     infile sin;
+     input;
+     put _infile_;
+   run;quit;
+   x notepad.exe d:/log/__clp.log;;
+%mend sasBath;
+
