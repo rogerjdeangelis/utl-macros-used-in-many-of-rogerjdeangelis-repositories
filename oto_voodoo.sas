@@ -1,6 +1,6 @@
-ï»¿/*
-
 %let pgm=oto_voodoo;
+
+/*
 * use this to get locations of macros for easy editiong;
 * once program is solid you may want to move macros to autocall library;
 data _null_;
@@ -228,6 +228,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
 %*  2/8/96      kms     0.2a    Created (do not ask me how it got to be 0.2a)
 %*
 %*  2/13/96     kms     0.2b    Modified NOTE/WARNING/ERROR messages to refer to this macro;
+%*  1/10/2010   rjd     0.2c    Fiixed robust regression outlier anaysys                   ;
 %*
 %*---------------------------------------
 ;
@@ -3648,7 +3649,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
    ;quit;
 
     title;footnote;
-    title1 'Â ';title2 'Â ';title3 'Â ' ;
+    title1 ' ';title2 ' ';title3 ' ' ;
     title4 "Maximum Number of Bytes to hold Character and Numeric Vales Exactly";
 
     proc print data=&out width=min;
@@ -3741,7 +3742,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
     run;
 
     title;footnote;
-    title1 'Â ';title2 'Â ';title3 'Â ' ;
+    title1 ' ';title2 ' ';title3 ' ' ;
     title4 "Maximums and Minimums %str(&lib.).%str(&mem.)";
     proc print data=&out noobs width=min uniform;
     var variable min max;
@@ -4042,7 +4043,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
     options ls=171;
 
          proc print data=_vv_h width=min label split='#' noobs;
-         title1 'Â ';title2 'Â ';title3 'Â ' ;
+         title1 ' ';title2 ' ';title3 ' ' ;
          title4 "Histogram for character variable &var";
           label batch="#";
           var batch;
@@ -4106,7 +4107,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
 
        proc print data=_vv_h9(where=(not (SCAN(batch,-4) = '0' or substr(batch,40)='')))  noobs label split='#';
 
-        title1 'Â ';title2 'Â ';title3 'Â ';
+        title1 ' ';title2 ' ';title3 ' ';
         title4 "Histogram for numeric variable &var";
         label batch="#";
         var batch;
@@ -4236,7 +4237,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
 
 
 /*
-proc datasets lib=work kill;
+proc datasets lib=work kill nolist;
 run;quit;
 
 data zipcode;
@@ -4307,12 +4308,12 @@ run;quit;
     ods listing;
 
     Proc Print data=_vdo_addkeyfix width=min;
-    title1 'Â ';title2 'Â ';title3 'Â ' ;
+    title1 ' ';title2 ' ';title3 ' ' ;
     title4 "Vertical List of Duplicates (&key -- &obsdup duplicates)";
     run;quit;
 
     Proc Print data=_vdo_dup width=min;
-    title1 'Â ';title2 'Â ';title3 'Â ' ;
+    title1 ' ';title2 ' ';title3 ' ' ;
     title4 "Horizontal List of Duplicates (&key -- &obsdup duplicates)";
     run;
 
@@ -4398,7 +4399,7 @@ run;quit;
 
       %if &_vvcntstar ^= 0 %then %do;
          proc print data=_vveql;
-         title1 'Â ';title2 'Â ';title3 'Â ' ;
+         title1 ' ';title2 ' ';title3 ' ' ;
          title4 "These &typ variables have equal values for all observations";
          run;quit;
       %end;
@@ -4409,7 +4410,7 @@ run;quit;
            put "Comparison of Numeric variables to see if a variable is duplicated exactly";
            put //;
            put "*** NO equal &typ Variables with All Equal Values found ***";
-           put 'Â ' //;
+           put ' ' //;
          run;
       %end;
 
@@ -4608,7 +4609,7 @@ run;quit;
 
     %end;
 
-    title1 'Â ';title2 'Â ';title3 'Â ' ;
+    title1 ' ';title2 ' ';title3 ' ' ;
     TITLE4 "Relationship OF VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
     title5 "One to One  -- One to many  --  Many to One -- Many to Many ";
     proc print data=__basmnymny;
@@ -4698,7 +4699,7 @@ run;quit;
     by descending value;
     run;quit;
 
-    title1 'Â ';title2 'Â ';title3 'Â ' ;
+    title1 ' ';title2 ' ';title3 ' ' ;
     TITLE4 "Cramer V";
     TITLE5 "ALL PAIRS OF VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
     title6 "%scan(&vars.,&i) * %scan(&vars.,&j) ";
@@ -4759,7 +4760,7 @@ run;quit;
     %do j=1 %to %eval(&nbs.);
 
          proc freq data=%str(&lib).%str(&mem.) noprint order=freq;
-            title1 'Â ';title2 'Â ';title3 'Â ' ;
+            title1 ' ';title2 ' ';title3 ' ' ;
             TITLE4 "TOP &TOP FOR &TAB WITH ALL OTHER VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
             title5 " &tab with %scan(&vars.,&j) other variables ";
             tables %str(&tab) * %scan(&vars.,&j) / list nocol norow nopercent missing out=_vvx&j;
@@ -4835,7 +4836,7 @@ run;quit;
          %if (&i ne &j)  %then %do;
 
            proc freq data=%str(&lib).%str(&mem.) noprint order=freq;
-              title1 'Â ';title2 'Â ';title3 'Â ' ;
+              title1 ' ';title2 ' ';title3 ' ' ;
               TITLE4 "TOP &TOP ALL PAIRS OF VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
               title5 " %scan(&vars.,&i) * %scan(&vars.,&j) top &top frequent ";
               tables %scan(&vars.,&i) * %scan(&vars.,&j) / list nocol norow nopercent missing out=_vvx&i&j;
@@ -5761,7 +5762,7 @@ QUIT;
 
 #! OUTLYR ;
 
-%macro _vdo_outlyr(libname=&libname,data=&data);
+%macro _vdo_outlyr(lib=&libname,mem=&data);
 
   /*
     %let libname =sashelp;
@@ -5788,9 +5789,10 @@ QUIT;
          DOTHEREST
 ;
 
- %let uin=&libname..&data;
+ %let uin=&lib..&mem;
 
  %put %sysfunc(ifc(%sysevalf(%superq(uin)=,boolean),**** Please Provide SAS dataset ****,));
+
  %if %sysfunc(ifc(%sysevalf(%superq(uin)=,boolean),1,0)) eq 0 %then %do;
 
     %local nobs cutoff expected_outliers dotherest;
@@ -5869,9 +5871,6 @@ QUIT;
 
        %put &=dotherest;
 
-       * do we have outliers;
-       %if &dotherest and %sysfunc(fexist(work.__vvdag))  %then %do; * YES? ;
-
            * set up for sort by abs value;
            data __vvdagabs;
             set __vvdag;
@@ -5904,25 +5903,14 @@ QUIT;
            by descending rresidual;
            run;quit;
 
-           title1 'Â ';title2 'Â ';title3 'Â ' ;
-           TITLE4 "30 worst outliers up out of &obs outliers";
+           title1 ' ';title2 ' ';title3 ' ' ;
+           TITLE4 "10 worst outliers up out of &obs outliers (expected_outliers=&expected_outliers)";
            TITLE5 "Robust Regression with &cutoff * sigma cuttoff and removal of expected outliers?";
 
-           proc print data=__vvdagfin(obs=30 rename=rresidual=sigmas) width=min;
+           proc print data=__vvdagfin(obs=10 rename=rresidual=sigmas) width=min;
            run;quit;
            title;
-       %end;
-       %else %do;
-          data _null_;
-             file print;
-             put  "&var Outlier analsys up to the 30 outliers(&obs expected outliers identified)";
-             put  "Robust Regression with &cutoff * sigma cuttoff and removal of expected outliers?";
-             put "**************************8888*********";
-             put " No unexpected outliers using robustreg";
-             put "*************************8888**********";
-          run;quit;
-       %end;   /* do therest */
-   proc datasets lib=work;
+   proc datasets lib=work nolist;
    delete __vvdag:;
    run;quit;
    %end;
@@ -5937,9 +5925,10 @@ QUIT;
 
   %let libname =sashelp;
   %let data=bweight;
-*/
 
 %*_vdo_outlyr;
+
+*/
 
 
 
@@ -6138,7 +6127,7 @@ QUIT;
 
            %If %Upcase(&outlier)  ne 0  %Then %Do;
               %_vdo_macnam(OUTLIER);
-              %_vdo_outlyr;  /* robustreg outlier analysis */
+              %_vdo_outlyr(lib=&libname,mem=&data);  /* robustreg outlier analysis */
            %end;
 
            %If %Upcase(&optlength)  ne 0  %Then %Do;
@@ -6336,10 +6325,32 @@ run;quit;
     ,Cleanup       = 0
     );
 
-/*
-* test a specific macro;
-%_vdo_mispoptbl(lib=sashelp,mem=cars);
-
-*/
-
 %mend offcall;
+
+libname gvl "c:/gvl";
+%utlvdoc
+    (
+    libname        = gvl          /* libname of input dataset */
+    ,data          = hrr_over65_unsuppress_2016      /* name of input dataset */
+    ,key           = 0          /* 0 or variable */
+    ,ExtrmVal      = 10           /* display top and bottom 30 frequencies */
+    ,UniPlot       = 0
+    ,UniVar        = 0
+    ,chart         = 0
+    ,misspat       = 0
+    ,taball        = 0
+    ,tabone        = 0
+    ,mispop        = 0
+    ,mispoptbl     = 0
+    ,dupcol        = 0
+    ,unqtwo        = 0
+    ,vdocor        = 0
+    ,oneone        = 0
+    ,cramer        = 0
+    ,optlength     = 0
+    ,maxmin        = 0
+    ,unichr        = 0
+    ,outlier       = 1
+    ,printto       = d:\txt\vdo\&data..txt
+    ,Cleanup       = 0
+    );
