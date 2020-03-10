@@ -416,7 +416,7 @@ Python functions and code can be alsi be executed by mouse keys.
    data _null_;
      infile clp;
      input;
-     cmd=catx(' ','proc means data=_last_ n sum mean min q1 median q3 max;var',_infile_,';run;quit');
+     cmd=catx(' ','proc means data=_last_ n sum mean std min q1 median q3 max;var',_infile_,';run;quit');
      call execute (cmd);
    run;
 %mend sumva;
@@ -607,7 +607,7 @@ Python functions and code can be alsi be executed by mouse keys.
   proc sql noprint;select put(count(*),comma18.) into :tob  separated by ' '
   from _last_;quit;
   title "Up to 40 obs %upcase(%sysfunc(getoption(_last_))) total obs=&tob";
-  proc print data=_last_  uniform  heading=horizontal width=full;
+  proc print data=_last_  heading=horizontal width=min;
    footnote;
    format _all_;
    run;
@@ -1167,7 +1167,7 @@ filename __dm clear;
      infile clp;
      input x;
    run;quit;
-   proc means data=_sumh_ n sum mean min q1 median q3 max;run;quit
+   proc means data=_sumh_ n sum mean std min q1 median q3 max;run;quit
 %mend sumha;
 
 
@@ -1303,13 +1303,12 @@ filename __dm clear;
        %let rc = %sysfunc(close(&dsid));
    %mend utl_varcount;
 
-
     /* comment a block of text */
     %macro cm / cmd;
           c ' ' '/*' first;c ' ' '*/' last;
     %mend cm;
-    
-    %macro sasbat /cmd des="highlight code type sas7bat on command line";
+
+%macro sasbat /cmd des="highlight code type sas7bat on command line";
    store;note;notesubmit '%sasbath;';
 %mend sasbat;
 
@@ -1336,4 +1335,5 @@ filename __dm clear;
    run;quit;
    x notepad.exe d:/log/__clp.log;;
 %mend sasBath;
+
 
