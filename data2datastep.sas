@@ -77,7 +77,6 @@
        set &lib..&dsn end=last;
        file __out dsd;
        put &varlist @;
-       put &varlist @;
        file __dm dsd;
        put &varlist @;
        file log dsd;
@@ -109,3 +108,4 @@
 %end;
 
 %mend data2datastep;
+
