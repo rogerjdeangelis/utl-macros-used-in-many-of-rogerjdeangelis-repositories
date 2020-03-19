@@ -2,6 +2,7 @@
     / des = "Turn  debugging options off";
 
 OPTIONS
+     MSGLEVEL=N
      FIRSTOBS=1
      NONUMBER
      MLOGICNEST
