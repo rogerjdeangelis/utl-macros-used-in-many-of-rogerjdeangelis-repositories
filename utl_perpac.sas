@@ -144,7 +144,7 @@ Python functions and code can be alsi be executed by mouse keys.
   title "last 11 obs from %upcase(&argx) total obs=&tob";
   proc printto print="%sysfunc(pathname(work))/__dm.txt";
   %let pobs=%sysfunc(ifn(&tobs > 10, %eval(&tobs - 10),1));
-  proc print data=_last_ ( firstObs= &pobs ) width=min uniform  heading=horizontal;
+  proc print data=&argx ( firstObs= &pobs ) width=min uniform  heading=horizontal;
   run;
   proc printto;
   run;quit;
