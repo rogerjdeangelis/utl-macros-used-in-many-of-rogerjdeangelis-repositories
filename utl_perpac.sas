@@ -644,60 +644,6 @@ Python functions and code can be alsi be executed by mouse keys.
 %mend frqha;
 
 
-
-
-
-
-/* data class;set sashelp.class;run;quit; */
-
-
-%macro cnt /cmd parmbuff
-   des="type cnt sex on command line for a frequency on sex for last dataset";
-   %let argx=%scan(&syspbuff,1,%str( ));
-   %let argx=%sysfunc(translate(&argx,%str(,),%str(*)));
-   %put &=argx;
-   note;notesubmit '%cnta;';
-%mend cnt;
-
-%macro cnta;
-  proc sql noprint;select put(count(*),comma18.) into :__tob  separated by ' '
-  from _last_;quit;
-  proc sql;select "%sysfunc(getoption(_last_))(obs=&__tob) and levels of (&argx)"
-       ,count(*) from (select distinct &argx  from _last_);quit;
-%mend cnta;
-
-
-
-
-
-
-%macro cnth /cmd parmbuff
-   des="highlight dataset and type cnth sex on command line for a frequency on sex";
-   %let argx=%scan(&syspbuff,1,%str( ));
-   %let argx=%sysfunc(translate(&argx,%str(,),%str(*)));
-   %put &=argx;
-   store;note;notesubmit '%cntha;';
-%mend cnth;
-
-%macro cntha;
-   filename clp clipbrd ;
-   data _null_;
-     infile clp;
-     input;
-     put _infile_;
-     call symputx('__argd',_infile_);
-   run;
-  proc sql noprint;select put(count(*),comma18.) into :__tob  separated by ' '
-  from _last_;quit;
-  proc sql;select "%sysfunc(getoption(_last_))(obs=&__tob) and levels of (&argx)"
-       ,count(*) from (select distinct &argx  from &__argd );quit;
-%mend cntha;
-
-
-
-
-
-
 %macro frq /cmd parmbuff
 des="type frq sex*sage on command line for a crosspatb frequency on sex*age for last dataset";
 /*-----------------------------------------*\
@@ -723,6 +669,48 @@ des="type frq sex*sage on command line for a crosspatb frequency on sex*age for 
    dm "out;top;";
 %mend frqa;
 
+%macro cnth /cmd parmbuff;                                                                                            
+   %let argx=&syspbuff;                                                                                               
+   %*syslput argx=&argx;                                                                                              
+   %* add comma for sql;                                                                                              
+   %let argx=%sysfunc(translate(&argx,%str(,),%str( )));                                                              
+   store;note;notesubmit '%cntha;';                                                                                   
+   run;                                                                                                               
+%mend cnth;                                                                                                           
+                                                                                                                      
+%macro cntha;                                                                                                         
+   filename clp clipbrd ;                                                                                             
+   data _null_;                                                                                                       
+     infile clp;                                                                                                      
+     input;                                                                                                           
+     put _infile_;                                                                                                    
+     call symputx('argd',_infile_);                                                                                   
+   run;                                                                                                               
+   proc sql noprint;                                                                                                  
+    select put(count(*), comma18.) into :_cnt_ separated by '' from ( select distinct &argx from &argd);              
+    select put(count(*), comma18.) into :_obs_ separated by '' from &argd;                                            
+   quit;                                                                                                              
+   %put "----- Number of unique levels=&_cnt_ for &argx from &argd (obs=&_obs_) -----";                               
+%mend cntha;                                                                                                          
+                                                                                                                      
+                                                                                                                      
+%macro cnt /cmd parmbuff;                                                                                             
+   %let argx=&syspbuff;                                                                                               
+   %*syslput argx=&argx;                                                                                              
+   %let argx=%sysfunc(translate(&argx,%str(,),%str( )));                                                              
+   note;notesubmit '%cnta;';                                                                                          
+   run;                                                                                                               
+%mend cnt;                                                                                                            
+                                                                                                                      
+%macro cnta;                                                                                                          
+  proc sql noprint;                                                                                                   
+    select count(*) into :_cnt_ separated by '' from ( select distinct &argx from _last_);                            
+    select count(*) into :_obs_ separated by '' from _last_;                                                          
+  quit;                                                                                                               
+  %put "----- Number of unique levels=&_cnt_ for &argx from %sysfunc(getoption(_last_))(obs=&_obs_) -----";           
+%mend cnta;                                                                                                           
+                                                                                                                      
+                                                                                                                      
 
 
 
