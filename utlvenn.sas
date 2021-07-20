@@ -60,7 +60,7 @@ proc sql noprint;
   from &uinmem1;                                                                                  
                                                                                                   
  select count(distinct &uvarb) into :udstb                                                        
-  from &uinmem1;                                                                                  
+  from &uinmem2;                                                                                  
                                                                                                   
                                                                                                   
  select count(distinct &uvara) into :unotb                                                        
