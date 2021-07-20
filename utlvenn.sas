@@ -148,30 +148,4 @@ run;
                                                                                                   
 %mend utlvenn;                                                                                    
                                                                                                   
-* test data;                                                                                      
-data classa;                                                                                      
-  set sashelp.class(obs=5);                                                                       
-  if _n_ le 3  then name=cats('Classa',_n_);                                                      
-run;quit;                                                                                         
-                                                                                                  
-data classb;                                                                                      
-  set sashelp.class(obs=5);                                                                       
-  if _n_ le 2  then name=cats('Classb',_n_);                                                      
-run;quit;                                                                                         
-                                                                                                  
-%utlvenn                                                                                          
- (                                                                                                
-    uinmema = work.classa                                                                         
-   ,uinmemb = work.classb                                                                         
-   ,uvara   = name                                                                                
-   ,uvarb   = name                                                                                
-);                                                                                                
-                                                                                                  
-/*              _                                                                                 
-  ___ _ __   __| |                                                                                
- / _ \ `_ \ / _` |                                                                                
-|  __/ | | | (_| |                                                                                
- \___|_| |_|\__,_|                                                                                
-                                                                                                  
-*/                                                                                                
-                                                                                                  
+                                                                             
