@@ -1,6 +1,6 @@
+/*
 %let pgm=oto_voodoo;
 
-/*
 * use this to get locations of macros for easy editiong;
 * once program is solid you may want to move macros to autocall library;
 data _null_;
@@ -12,45 +12,48 @@ if index(lowcase(_infile_),'%macro')>0 then do;
 end;
 run;quit;
 
-for easy editing here are the locations macros
-prefix area helps
-64        %macro utlnopts
-101       %macro cmpres
-129       %macro _vdo_macnam
-145       %macro utlfkil
-194       %macro nobs
-235       %macro nvar
-310       %macro _vdo_cdedec
-342       %macro _vv_annxtb
-454       %macro _vdo_basic
-3096      %macro qcmprltb
-3122      %macro qblankta
-3151      %macro qblanktc
-3172      %macro qlastvar
-3203      %macro _vdo_misspat
-3574      %macro _vdo_optlen
-3667      %macro _vdo_getmaxmin
-3692      %macro _vdo_getmaxmin001;
-3760      %macro _vdo_begmidend
-3854      %macro _vdo_clean
-3925      %macro _vdo_chartx
-4129      %macro _vdo_mispop
-4168      %macro _vdo_mispoptbl
-4258      %macro _vdo_keyunq
-4341      %macro _vdo_dupcol
-4426      %macro _vdo_cor
-4492      %macro _vdo_mnymny
-4507      %macro _vdo_relhow
-4630      %macro _vdo_cmh
-4726      %macro _vdo_tabone
-4791      %macro _vdo_taball
-4871      %macro _vdo_unqtwo
-5073      %macro utl_getstm
-5086      %macro DirExist
-5100      %MACRO _vdo_UNICHR
-5764      %macro _vdo_outlyr
-5957      %macro utlvdoc
+LINE LOCATION OF MACROS
 
+107       %macro utl_close;
+122       %macro lowcase
+147       %macro qleft
+172       %macro utlnopts
+209       %macro cmpres
+237       %macro _vdo_macnam
+253       %macro utlfkil
+302       %macro nobs
+344       %macro nvar
+419       %macro _vdo_cdedec
+451       %macro _vv_annxtb
+563       %macro _vdo_basic
+3209      %macro qcmprltb
+3235      %macro qblankta
+3264      %macro qblanktc
+3285      %macro qlastvar
+3316      %macro _vdo_misspat
+3687      %macro _vdo_optlen
+3780      %macro _vdo_getmaxmin
+3805      %macro _vdo_getmaxmin001;
+3873      %macro _vdo_begmidend
+3967      %macro _vdo_clean
+4038      %macro _vdo_chartx
+4242      %macro _vdo_mispop
+4281      %macro _vdo_mispoptbl
+4361      %macro _vdo_keyunq
+4444      %macro _vdo_dupcol
+4529      %macro _vdo_cor
+4603      %macro _vdo_mnymny
+4618      %macro _vdo_relhow
+4739      %macro _vdo_rsq
+4797      %macro _vdo_tabone
+4862      %macro _vdo_taball
+4942      %macro _vdo_unqtwo
+5142      %macro utl_getstm
+5155      %macro DirExist
+5169      %MACRO _vdo_UNICHR
+5834      %macro _vdo_outlyr
+6035      %macro utlvdoc
+6354      %macro offcall
 */
 
 *   *   ***    ***   ****    ***    ***
@@ -60,6 +63,113 @@ prefix area helps
 *   *  *   *  *   *   *  *  *   *  *   *
  * *   *   *  *   *   *  *  *   *  *   *
   *     ***    ***   ****    ***    ***;
+
+
+
+%macro utl_remLblQuo(dsn)/des="Remove quotes imbedded in sas labels";
+
+     %local __lib __dat;
+
+     %utlfkil(%sysfunc(pathname(work))\temp__lbl.sas);
+
+     %let __lib=%scan(&dsn,1,%str(.));
+     %let __dat=%scan(&dsn,2,%str(.));
+
+     data _null_;
+       file "%sysfunc(pathname(work))\temp__lbl.sas";
+       set &dsn(obs=1);
+       put "proc datasets lib=&__lib nodetails nolist;
+       modify &__dat;
+        label ";
+       array __chr[*] _character_;
+       array __num[*] _numeric_;
+       do __i=1 to dim(__chr);
+         __lbl=compress(vlabel(__chr[__i]),"'");
+         __lbl=compress(__lbl,'"');
+         __lbl=cats("'",__lbl,"'");
+         __nam=vname(__chr[__i]);
+         put __nam "=" __lbl;
+         putlog __nam "=" __lbl;
+       end;
+       do __i=1 to dim(__num);
+         __lbl=compress(vlabel(__num[__i]),"'");
+         __lbl=compress(__lbl,'"');
+         __lbl=cats("'",__lbl,"'");
+         __nam=vname(__num[__i]);
+         put __nam "=" __lbl;
+         putlog __nam "=" __lbl;
+       end;
+       put ';run;quit;';
+     run;quit;
+
+     %inc "%sysfunc(pathname(work))\temp__lbl.sas";
+%mend utl_remLblQuo;
+
+
+%macro utl_close;
+
+  %utlnopts;
+
+  /* https://communities.sas.com/t5/user/viewprofilepage/user-id/12151 */
+
+  %local i rc;
+  %do i=1 %to 1000;
+    %let rc=%sysfunc(close(&i));
+  %end;
+  %utlopts;
+%mend utl_close;
+
+%utl_close;
+
+%macro lowcase(string);
+%*********************************************************************;
+%*                                                                   *;
+%*  MACRO: LOWCASE                                                   *;
+%*                                                                   *;
+%*  USAGE: 1) %lowcase(argument)                                     *;
+%*                                                                   *;
+%*  DESCRIPTION:                                                     *;
+%*    This macro returns the argument passed to it unchanged         *;
+%*    except that all upper-case alphabetic characters are changed   *;
+%*    to their lower-case equivalents.                               *;
+%*                                                                   *;
+%*  E.g.:          %let macvar=%lowcase(SAS Institute Inc.);        %*;
+%*  The variable macvar gets the value "sas institute inc."          *;
+%*                                                                   *;
+%*  NOTES:                                                           *;
+%*    Although the argument to the %UPCASE macro function may        *;
+%*    contain commas, the argument to %LOWCASE may not, unless       *;
+%*    they are quoted.  Because %LOWCASE is a macro, not a function, *;
+%*    it interprets a comma as the end of a parameter.               *;
+%*                                                                   *;
+%*********************************************************************;
+%sysfunc(lowcase(%nrbquote(&string)))
+%mend;
+
+%macro qleft(text);
+%*********************************************************************;
+%*                                                                   *;
+%*  MACRO: QLEFT                                                     *;
+%*                                                                   *;
+%*  USAGE: 1) %qleft(argument)                                       *;
+%*                                                                   *;
+%*  DESCRIPTION:                                                     *;
+%*    This macro returns the argument passed to it without any       *;
+%*    leading blanks in a quoted form. The syntax for its use        *;
+%*    is similar to that of native macro functions.                  *;
+%*                                                                   *;
+%*    Eg. %let macvar=%qleft(&argtext)                               *;
+%*                                                                   *;
+%*  NOTES:                                                           *;
+%*    The %VERIFY macro is used to determine the first non-blank     *;
+%*    character position.                                            *;
+%*                                                                   *;
+%*********************************************************************;
+%local i;
+%if %length(&text)=0 %then %let text=%str( );
+%let i=%verify(&text,%str( ));
+%if &i %then %qsubstr(&text,&i);
+%mend;
 
 %macro utlnopts(note2err=nonote2err,nonotes=nonotes)
     / des = "rock solid code fast and clean";
@@ -202,7 +312,7 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
 %*  Author:         Karsten Self
 %*  Date:           2/8/96
 %*
-%*  copyright (c) 1996 Karsten M. Self
+%* 1996 Karsten M. Self
 %*
 %*  Rights for free redistribution granted if copied in whole and copyright
 %*  notice is maintained.
@@ -214,6 +324,8 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
 %*  Bugs + quirks:
 %*                  - behavior with tape data libraries is unknown, probably
 %*                   does not work.
+%*
+%*                   Has issues with variables containing a single quote
 %*
 %* --------------------
 %*  Revised by:     KMS
@@ -1675,8 +1787,12 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
             put
                 "Dataset summary for %upcase( &libname. ).%upcase( &data. )"
                 //
+/*              rjd 8/4/2021
                 @5  "Observations: " @%eval( 5 + 12 + 3 + &wnObs. ) nObs comma&wnObs..-r /
                 @5  "Variables:    " @%eval( 5 + 12 + 3 + &wnObs. ) nVar comma&wnObs..-r /
+*/
+                @5  "Observations: " @%eval( 5 + 12 + 3 + &wnObs. ) nObs comma12.-r /
+                @5  "Variables:    " @%eval( 5 + 12 + 3 + &wnObs. ) nVar comma12.-r /
                 @5  40*'-' /
                 /
                 @5  "Variables by type:" /
@@ -4236,16 +4352,6 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
 %mend _vdo_mispoptbl;
 
 
-/*
-proc datasets lib=work kill nolist;
-run;quit;
-
-data zipcode;
-  set sashelp.zipcode;
-run;quit;
-
-%_vdo_mispoptbl(lib=work,mem=zipcode)
-*/
 
 
 *   *  *****  *   *  *   *  *   *   ***
@@ -4479,6 +4585,14 @@ run;quit;
     run;
     ods select all;
 
+   options ls=64 ps=44;
+    data _null_;
+        set vv_corsrt(obs=15);
+        call execute(catx(" ",
+           "proc plot data=%str(&lib).%str(&mem); plot", var,"*",wth,"/box;run;quit;"));
+    run;quit;
+    options ls=255 ps=5000;
+
 
 %mend _vdo_cor;
 
@@ -4611,110 +4725,70 @@ run;quit;
 
     title1 ' ';title2 ' ';title3 ' ' ;
     TITLE4 "Relationship OF VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
-    title5 "One to One  -- One to many  --  Many to One -- Many to Many ";
-    proc print data=__basmnymny;
+    title5 "One to One  -- One to Many  --  Many to One ";
+    proc print data=__basmnymny(where=(index(lowcase(out),'one')=1));
     var out;
     run;quit;
 
 %mend _vdo_mnymny;
 
+/*
+ _ __ ___  __ _ _   _  __ _ _ __ ___
+| `__/ __|/ _` | | | |/ _` | `__/ _ \
+| |  \__ \ (_| | |_| | (_| | | |  __/
+|_|  |___/\__, |\__,_|\__,_|_|  \___|
+             |_|
+*/
 
- ***   ****     *    *   *  *****  ****          *   *
-*   *  *   *   * *   ** **  *      *   *         *   *
-*      *   *  *   *  * * *  *      *   *         *   *
-*      ****   *****  *   *  ****   ****          *   *
-*      * *    *   *  *   *  *      * *           *   *
-*   *  *  *   *   *  *   *  *      *  *           * *
- ***   *   *  *   *  *   *  *****  *   *           *;
-
-
-%macro _vdo_cmh(
+%macro _vdo_rsq(
        lib=&libname
       ,mem=&data
-      ,maxval=31
-      ,maxvar=10
-      )/des="Defaults to all two way cross tabs forupto 10 variables with less than 11 levels 45 cross tabs 10 choose 2" ;
+      ,minvar=1
+      ,maxvar=4
+      ,rsq=&rsq
+      )/des="All possible rsquares" ;
 
 
     /*
-     %let maxval=11;
-     %let maxvar=15;
-     %let lib=work;
-     %let mem=tstdat;
+     %let minvar=2;
+     %let maxvar=4;
+     %let lib=sashelp;
+     %let mem=zipcode;
+     %let rsq=zip x y msa state GMTOFFSET;
     */
 
-    data _vvboth;
-
-      set _vvnuma _vvch1 _vvch2;
-
-      if 2 <=  values < &maxval;
-
-      keep variable values;
-
-    run;
-
     proc sql noprint;
-       select count(*) into :nobs separated by ' ' from _vvboth;
-       select variable into :vars separated by ' ' from _vvboth where upcase(variable) not in ("LIBREF","COUNT");
+       select count(*) into :nobs separated by ' ' from %str(&lib).%str(&mem);
     quit;
 
-    %if &nobs. > &maxvar %then %let nbs=&maxvar;
-    %else %let nbs=&nobs.;
+    %let rsq=%sysfunc(compbl(&rsq));
 
-    proc datasets nolist;
-      delete _vvcramer;
-    run;quit;
+    %let _independ = %substr(&rsq,%index(&rsq,%str( )));
+    %let _depend   = %scan(&rsq,1,%str( ));
 
-    %do i=1 %to %eval(&nbs.-1);
+    %put &=_depend  &=_independ;
 
-      %do j=%eval(&i + 1) %to %eval(&nbs.);
-
-         /*
-           %let j=2;  %let i=1;
-           %let vars=DRG9 DRG10 DRG1_CD DRG2_CD DRG3_CD;
-         */
-
-         %if &i ne &j %then %do;
-
-           ods exclude all;
-           ods output ChiSq=_vvz&i&j(where=(statistic="Cramer's V") drop=df prob);
-           proc freq data=%str(&lib).%str(&mem.);
-           tables %scan(&vars.,&i) * %scan(&vars.,&j) / chisq missing;
-           run;
-
-           proc append base=_vvcramer data=_vvz&i&j force;
-           run;quit;
-
-           ods select all;
-           proc datasets nolist;
-             delete _vvz&i&j;
-           run;quit;
-         %end;
-
-      %end;
-
-    %end;
-
-    proc sort data=_vvcramer out=_vvcramersrt;
-    by descending value;
-    run;quit;
+    proc rsquare data=%str(&lib).%str(&mem);
 
     title1 ' ';title2 ' ';title3 ' ' ;
-    TITLE4 "Cramer V";
-    TITLE5 "ALL PAIRS OF VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
-    title6 "%scan(&vars.,&i) * %scan(&vars.,&j) ";
+    TITLE4 "PROC RQUARE observations=&nobs";
+    TITLE5 "All possible rsquares start with &minvar variables and end with &maxvars";
+        model &_depend = &_independ/start=&minvar stop=&maxvar;
 
-    proc print data=_vvcramersrt width=min;
     run;quit;
 
-%mend _vdo_cmh;
+%mend _vdo_rsq;
 
-%*_vdo_cmh(
-       lib=work
-      ,mem=tstdat
-      ,maxval=2000
-      ,maxvar=30
+/*
+%symdel _depend _independ / nowarn;
+%_vdo_rsq(
+       minvar=1,
+       maxvar=4,
+       lib=sashelp,
+       mem=zipcode,
+       rsq=zip x y msa state gmtoffset
      );
+*/
 
 *****    *    ****    ***   *   *  *****
   *     * *    *  *  *   *  **  *  *
@@ -4984,8 +5058,6 @@ run;quit;
 *      *   *   *  *
 *****  *   *  ****;
 
-proc datasets kill nolist ;
-run;quit;
 
 
 /*
@@ -5762,12 +5834,14 @@ QUIT;
 
 #! OUTLYR ;
 
+
 %macro _vdo_outlyr(lib=&libname,mem=&data);
 
   /*
     %let libname =sashelp;
     %let data=bweight;
     %let var=weight;
+    %let uin=&libname..&data;
   */
 
  %LOCAL
@@ -5791,6 +5865,8 @@ QUIT;
 
  %let uin=&lib..&mem;
 
+ %put &=uin;
+
  %put %sysfunc(ifc(%sysevalf(%superq(uin)=,boolean),**** Please Provide SAS dataset ****,));
 
  %if %sysfunc(ifc(%sysevalf(%superq(uin)=,boolean),1,0)) eq 0 %then %do;
@@ -5807,7 +5883,7 @@ QUIT;
     * estimate the best cuttoff in terms of the sigma on standardized values;
 
     * number of obs in source data;
-    proc sql noprint; select count(*) into :nobs from &uin;quit;
+    proc sql noprint; select count(*) into :nobs from &uin ;quit;
 
     %put &=nobs;
 
@@ -5822,7 +5898,7 @@ QUIT;
       put expected_outliers=;
     run;quit;
 
-    %LET UDSID = %SYSFUNC( OPEN ( &uin., I ) );
+    %LET UDSID = %SYSFUNC( OPEN ( &uin, I ) );
 
    /*-------------------------------------*\
    ! GET THE NUMBER OF COLUMNS FOR LOOP    !
@@ -5855,9 +5931,28 @@ QUIT;
        %let var=&UVARNAM;
 
        * robust regression - only interested in outliers - leverage values might also be interesting;
+
+
+
+       /*
+            %let uin=tst;
+           %let var=hgba3;
+          %let cutoff=3;
+          %let expected_outliers=3;
+          %let uin=work.s28_f31dem;
+       */
+
+       proc datasets lib=work nolist nodetails;
+         delete __vvdag
+       run;quit;
+
+       data __vvmis;
+          set &uin(where=(not missing(&var)));
+       run;quit;
+
        ods exclude all;
        ods output diagnostics=__vvdag;
-       proc robustreg data=&uin method=MM;
+       proc robustreg data=__vvmis /*_vvad1*/ method=MM;
        model &var = /diagnostics  cutoff=&cutoff /* stadardized sigma &cutoff * sigma */;
        run;
        ods select all;
@@ -5893,7 +5988,7 @@ QUIT;
              do until (dne);
                set __vvdagsel(drop=outlier) end=dne;
                rec=obs;
-               set &uin.(keep=&var)  point=rec;
+               set __vvmis(keep=&var)  point=rec;
                output;
              end;
              stop;
@@ -5904,7 +5999,7 @@ QUIT;
            run;quit;
 
            title1 ' ';title2 ' ';title3 ' ' ;
-           TITLE4 "10 worst outliers up out of &obs outliers (expected_outliers=&expected_outliers)";
+           TITLE4 "&var 10 worst outliers up out of &obs outliers (expected_outliers=&expected_outliers)";
            TITLE5 "Robust Regression with &cutoff * sigma cuttoff and removal of expected outliers?";
 
            proc print data=__vvdagfin(obs=10 rename=rresidual=sigmas) width=min;
@@ -5921,12 +6016,10 @@ QUIT;
 
 /*
 
-  sashelp.bweight
+%let libname =work;
+%let data=tst;
 
-  %let libname =sashelp;
-  %let data=bweight;
-
-%*_vdo_outlyr;
+%_vdo_outlyr(lib=work,mem=s28_f31dem);
 
 */
 
@@ -5985,6 +6078,8 @@ QUIT;
 
     ,oneone        = 0       /* 0 or 1                      */
 
+    ,rsquare       = 0       /* 0 or 1                      */
+
     ,cramer        = 0       /* 0 or 1                      */
 
     ,printto       = output  /* file or output if output window */
@@ -5999,10 +6094,15 @@ QUIT;
     * Data step to generate SQL statements;
     * ..."vv" stands for "verify + validate";
 
-    *--------------------
-
-    proc optsave out=sasuser.optsave;
+    /*
+    data  &libname..&data;
+       retain vdo 1;
+       set &libname..&data;
     run;quit;
+    */
+
+    %utl_remLblQuo(&libname..&data);
+
 
     %local
         nobs
@@ -6037,8 +6137,7 @@ QUIT;
 
    %put &=outchk;
 
-   proc optsave out=sasuser.optsave;
-   run;quit;
+
 
     /*
     %let libname  = work     ;
@@ -6214,6 +6313,15 @@ QUIT;
                  );
            %end;
 
+           %if %upcase(&rsquare) ne 0 %then %do;  /* one variable crossed with all others */
+              %_vdo_macnam(rsq);
+              %_vdo_rsq(
+                  rsq=&rsquare
+                 ,minvar=1
+                 ,maxvar=4
+                 );
+           %end;
+
            %if %upcase(&taball) ne 0 %then %do;   /* all pairwise cross tables with limits */
               %_vdo_macnam(TABaLIST);
               %_vdo_taball(
@@ -6239,25 +6347,29 @@ QUIT;
 
     %finish:
 
-    proc optload data=sasuser.optsave;
-    run;quit;
 
 
+    %utl_close;
+
+    options ls=255 ps=255;
+
+    /*dm "log;clear;"*/
 
 %mend utlvdoc;
 
-%macro offcall;
 
-/*
+%macro offcall(dummy)/des="Turn off examples";
+
+/*                              _
+  _____  ____ _ _ __ ___  _ __ | | ___  ___
+ / _ \ \/ / _` | `_ ` _ \| `_ \| |/ _ \/ __|
+|  __/>  < (_| | | | | | | |_) | |  __/\__ \
+ \___/_/\_\__,_|_| |_| |_| .__/|_|\___||___/
+                         |_|
+*
+
 %let libname= work   ;
 %let data=zipcode ;
-
-%_vdo_unichr;
-
-proc datasets kill;
-run;quit;
-
-%utlopts;
 
 * add a date;
 data zipcode;
@@ -6268,16 +6380,47 @@ data zipcode;
   if _n_>22000 then fake_somemissing=_n_;
   if _n_>40000 then fake_misswithconstant='A';
 run;quit;
-*/
+
+* RUN THIS FIRST TO GET INFOR FOR A SECOND RUN;
+
+%inc "c:/oto/oto_voodoo.sas";
+
+%utlvdoc
+    (
+    libname        = sashelp         /* libname of input dataset */
+    ,data          = zipcode      /* name of input dataset */
+    ,key           = 0            /* 0 or variable */
+    ,ExtrmVal      = 10           /* display top and bottom 30 frequencies */
+    ,UniPlot       = 0            /* 0 or univariate plots    */
+    ,UniVar        = 0            /* 0 or univariate analysis */
+    ,chart         = 0            /* 0 or proc chart horizontal histograme */
+    ,misspat       = 0            /* 0 or 1 missing patterns */
+    ,taball        = 0            /* 0 crosstabs of all pairwise combinations of vriables */
+    ,tabone        = 0            /* 0 or all pairwise cross tabs with limits */
+    ,mispop        = 0            /* 0 0 negative positive or missing on each variable */
+    ,mispoptbl     = 0            /* 0 missing populated table */
+    ,dupcol        = 0            /* 0 do two columns have the same values in all rows */
+    ,unqtwo        = 0            /* 0 only use to find primary key unique leveels of compund keys */
+    ,vdocor        = 0            /* 0 or all pairwise parametric and non parametric collolations */
+    ,oneone        = 0            /* 0 or 1:1  1:many many:many */
+    ,cramer        = 1            /* 0 or cramer V variable crossed with all others */
+    ,optlength     = 0            /* 0 optimum length for character and numeric variables */
+    ,maxmin        = 0            /* 0 or max min for every varuiable */
+    ,unichr        = 0            /* 0 univariate analysis of character variiables */
+    ,outlier       = 0            /* 0 robust regression determination of outliers */
+    ,rsquare       = zip x y msa state  /* 0 robust regression determination of outliers */
+    ,printto       = c:\txt\vdo\&data..txt  /* save the voluminous output */
+    ,Cleanup       = 0
+    );
 
 %*utlvdoc
     (
     libname        = work         /* libname of input dataset */
     ,data          = zipcode      /* name of input dataset */
     ,key           = zip          /* 0 or variable */
-    ,ExtrmVal      = 10           /* display top and bottom 30 frequencies */
-    ,UniPlot       = 1            /* 'true' enables ('false' disables) plot option on univariate output */
-    ,UniVar        = 1            /* 'true' enables ('false' disables) plot option on univariate output */
+    ,ExtrmVal      = 10           /* display top and bottom 10 frequencies */
+    ,UniPlot       = 1            /* 0 or univariate plots    */
+    ,UniVar        = 1            /* 0 or univariate analysis *
     ,misspat       = 1            /* 0 or 1 missing patterns */
     ,chart         = 1            /* 0 or 1 line printer chart */
     ,taball        = AREACODES DST STATECODE STATENAME ZIP_CLASS STATE Y COUNTY /* variable 0 */
@@ -6285,72 +6428,105 @@ run;quit;
     ,mispop        = 1            /* 0 or 1  missing vs populated*/
     ,mispoptbl     = 1            /* 0 or 1  missing vs populated*/
     ,dupcol        = 1            /* 0 or 1  columns duplicated  */
-    ,unqtwo        = AREACODES DST STATECODE STATENAME ZIP_CLASS STATE Y COUNTY COUNTYNM            /* 0 */
+    ,unqtwo        = AREACODES DST STATECODE STATENAME ZIP_CLASS STATE Y COUNTY COUNTYNM   /* 0 */
     ,vdocor        = 1            /* 0 or 1  correlation of numeric variables */
     ,oneone        = 1            /* 0 or 1  one to one - one to many - many to many */
     ,cramer        = 1            /* 0 or 1  association of character variables    */
-    ,optlength     = 1
-    ,maxmin        = 1
-    ,unichr        = 1
-    ,outlier       = 1
+    ,optlength     = 1            /* 0 optimum length for character and numeric variables */
+    ,maxmin        = 1            /* 0 or max min for every varuiable */
+    ,unichr        = 1            /* 0 univariate analysis of character variiables */
+    ,outlier       = 1            /* 0 robust regression determination of outliers */
     ,printto       = d:\txt\vdo\&data..txt        /* file or output if output window */
-    ,Cleanup       = 0           /* 0 or 1 delete intermediate datasets */
+    ,Cleanup       = 0            /* 0 or 1 delete intermediate datasets */
     );
 
-* test just one;
+
+* RUN THIS FIRST;
+
 %*utlvdoc
     (
-    libname        = sashelp      /* libname of input dataset */
+    libname        = sashelp         /* libname of input dataset */
     ,data          = zipcode      /* name of input dataset */
-    ,key           = 0          /* 0 or variable */
+    ,key           = 0            /* 0 or variable */
     ,ExtrmVal      = 10           /* display top and bottom 30 frequencies */
-    ,UniPlot       = 0
-    ,UniVar        = 0
-    ,chart         = 0
-    ,misspat       = 1
-    ,taball        = 0
-    ,tabone        = 0
-    ,mispop        = 0
-    ,mispoptbl     = 1
-    ,dupcol        = 0
-    ,unqtwo        = 0
-    ,vdocor        = 0
-    ,oneone        = 0
-    ,cramer        = 0
-    ,optlength     = 0
-    ,maxmin        = 0
-    ,unichr        = 0
-    ,outlier       = 0
-    ,printto       = d:\txt\vdo\&data..txt
+    ,UniPlot       = 0            /* 0 or univariate plots    */
+    ,UniVar        = 0            /* 0 or univariate analysis */
+    ,chart         = 0            /* 0 or proc chart horizontal histograme */
+    ,misspat       = 0            /* 0 or 1 missing patterns */
+    ,taball        = 0            /* 0 or 1 line printer chart */
+    ,tabone        = 0            /* 0 or all pairwise cross tabs with limits */
+    ,mispop        = 0            /* 0 0 negative positive or missing on each variable */
+    ,mispoptbl     = 0            /* 0 missing populated table */
+    ,dupcol        = 0            /* 0 do two columns have the same values in all rows */
+    ,unqtwo        = 0            /* 0 only use to find primary key unique leveels of compund keys */
+    ,vdocor        = 0            /* 0 or all pairwise parametric and non parametric collolations */
+    ,oneone        = 0            /* 0 or 1:1  1:many many:many */
+    ,cramer        = 0            /* 0 or cramer V variable crossed with all others */
+    ,optlength     = 0            /* 0 optimum length for character and numeric variables */
+    ,maxmin        = 0            /* 0 or max min for every varuiable */
+    ,unichr        = 0            /* 0 univariate analysis of character variiables */
+    ,outlier       = 0            /* 0 robust regression determination of outliers */
+    ,printto       = c:\vdo\&data..txt  /* save the voluminous output */
     ,Cleanup       = 0
     );
+
+* THEN FILL IN AND RUN THIS;
+
+%*utlvdoc
+    (
+    libname        = work         /* libname of input dataset */
+    ,data          = zipcode      /* name of input dataset */
+    ,key           = zip          /* 0 or variable */
+    ,ExtrmVal      = 10           /* display top and bottom 10 frequencies */
+    ,UniPlot       = 1            /* 0 or univariate plots    */
+    ,UniVar        = 1            /* 0 or univariate analysis *
+    ,misspat       = 1            /* 0 or 1 missing patterns */
+    ,chart         = 1            /* 0 or 1 line printer chart */
+    ,taball        = AREACODES DST STATECODE STATENAME ZIP_CLASS STATE Y COUNTY /* variable 0 */
+    ,tabone        = STATECODE    /* 0 or  variable vs all other variables          */
+    ,mispop        = 1            /* 0 or 1  missing vs populated*/
+    ,mispoptbl     = 1            /* 0 or 1  missing vs populated*/
+    ,dupcol        = 1            /* 0 or 1  columns duplicated  */
+    ,unqtwo        = AREACODES DST STATECODE STATENAME ZIP_CLASS STATE Y COUNTY COUNTYNM   /* 0 */
+    ,vdocor        = 1            /* 0 or 1  correlation of numeric variables */
+    ,oneone        = 1            /* 0 or 1  one to one - one to many - many to many */
+    ,cramer        = 1            /* 0 or 1  association of character variables    */
+    ,optlength     = 1            /* 0 optimum length for character and numeric variables */
+    ,maxmin        = 1            /* 0 or max min for every varuiable */
+    ,unichr        = 1            /* 0 univariate analysis of character variiables */
+    ,outlier       = 1            /* 0 robust regression determination of outliers */
+    ,printto       = d:\txt\vdo\&data..txt        /* file or output if output window */
+    ,Cleanup       = 0            /* 0 or 1 delete intermediate datasets */
+    );
+
+%*utlvdoc
+    (
+    libname        = sashelp         /* libname of input dataset */
+    ,data          = cars         /* name of input dataset */
+    ,key           = 0          /* 0 or variable */
+    ,ExtrmVal      = 10           /* display top and bottom 10 frequencies */
+    ,UniPlot       = 0            /* 0 or univariate plots    */
+    ,UniVar        = 0            /* 0 or univariate analysis *
+    ,misspat       = 0            /* 0 or 1 missing patterns */
+    ,chart         = 0            /* 0 or 1 line printer chart */
+    ,taball        = 0
+    ,tabone        = 0
+    ,mispop        = 0            /* 0 or 1  missing vs populated*/
+    ,mispoptbl     = 0            /* 0 or 1  missing vs populated*/
+    ,dupcol        = 0            /* 0 or 1  columns duplicated  */
+    ,unqtwo        = 0
+    ,vdocor        = 0            /* 0 or 1  correlation of numeric variables */
+    ,oneone        = 0            /* 0 or 1  one to one - one to many - many to many */
+    ,cramer        = 0            /* 0 or 1  association of character variables    */
+    ,optlength     = 0            /* 0 optimum length for character and numeric variables */
+    ,maxmin        = 0            /* 0 or max min for every varuiable */
+    ,unichr        = 0            /* 0 univariate analysis of character variiables */
+    ,outlier       = 1            /* 0 robust regression determination of outliers */
+    ,printto       = d:\txt\vdo\&data..txt        /* file or output if output window */
+    ,Cleanup       = 0            /* 0 or 1 delete intermediate datasets */
+    );
+
+
+
 
 %mend offcall;
-
-libname gvl "c:/gvl";
-%utlvdoc
-    (
-    libname        = gvl          /* libname of input dataset */
-    ,data          = hrr_over65_unsuppress_2016      /* name of input dataset */
-    ,key           = 0          /* 0 or variable */
-    ,ExtrmVal      = 10           /* display top and bottom 30 frequencies */
-    ,UniPlot       = 0
-    ,UniVar        = 0
-    ,chart         = 0
-    ,misspat       = 0
-    ,taball        = 0
-    ,tabone        = 0
-    ,mispop        = 0
-    ,mispoptbl     = 0
-    ,dupcol        = 0
-    ,unqtwo        = 0
-    ,vdocor        = 0
-    ,oneone        = 0
-    ,cramer        = 0
-    ,optlength     = 0
-    ,maxmin        = 0
-    ,unichr        = 0
-    ,outlier       = 1
-    ,printto       = d:\txt\vdo\&data..txt
-    ,Cleanup       = 0
-    );
