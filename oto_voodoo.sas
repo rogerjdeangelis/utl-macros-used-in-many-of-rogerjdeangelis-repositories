@@ -4790,6 +4790,104 @@ proc sql noprint;select count(*) into :nobs separated by ' ' from &libname..&dat
      );
 */
 
+
+ ***   ****     *    *   *  *****  ****          *   *
+*   *  *   *   * *   ** **  *      *   *         *   *
+*      *   *  *   *  * * *  *      *   *         *   *
+*      ****   *****  *   *  ****   ****          *   *
+*      * *    *   *  *   *  *      * *           *   *
+*   *  *  *   *   *  *   *  *      *  *           * *
+ ***   *   *  *   *  *   *  *****  *   *           *;
+
+
+%macro _vdo_cmh(
+       lib=&libname
+      ,mem=&data
+      ,maxval=31
+      ,maxvar=10
+      )/des="Defaults to all two way cross tabs forupto 10 variables with less than 11 levels 45 cross tabs 10 choose 2" ;
+
+
+    /*
+     %let maxval=11;
+     %let maxvar=15;
+     %let lib=work;
+     %let mem=tstdat;
+    */
+
+    data _vvboth;
+
+      set _vvnuma _vvch1 _vvch2;
+
+      if 2 <=  values < &maxval;
+
+      keep variable values;
+
+    run;
+
+    proc sql noprint;
+       select count(*) into :nobs separated by ' ' from _vvboth;
+       select variable into :vars separated by ' ' from _vvboth where upcase(variable) not in ("LIBREF","COUNT");
+    quit;
+
+    %if &nobs. > &maxvar %then %let nbs=&maxvar;
+    %else %let nbs=&nobs.;
+
+    proc datasets nolist;
+      delete _vvcramer;
+    run;quit;
+
+    %do i=1 %to %eval(&nbs.-1);
+
+      %do j=%eval(&i + 1) %to %eval(&nbs.);
+
+         /*
+           %let j=2;  %let i=1;
+           %let vars=DRG9 DRG10 DRG1_CD DRG2_CD DRG3_CD;
+         */
+
+         %if &i ne &j %then %do;
+
+           ods exclude all;
+           ods output ChiSq=_vvz&i&j(where=(statistic="Cramer's V") drop=df prob);
+           proc freq data=%str(&lib).%str(&mem.);
+           tables %scan(&vars.,&i) * %scan(&vars.,&j) / chisq missing;
+           run;
+
+           proc append base=_vvcramer data=_vvz&i&j force;
+           run;quit;
+
+           ods select all;
+           proc datasets nolist;
+             delete _vvz&i&j;
+           run;quit;
+         %end;
+
+      %end;
+
+    %end;
+
+    proc sort data=_vvcramer out=_vvcramersrt;
+    by descending value;
+    run;quit;
+
+    title1 ' ';title2 ' ';title3 ' ' ;
+    TITLE4 "Cramer V";
+    TITLE5 "ALL PAIRS OF VARIABLES WHERE MAX LEVELS IS &MAXVAL AND MAX NUMBER OF VARIABLES IS &MAXVAR";
+    title6 "%scan(&vars.,&i) * %scan(&vars.,&j) ";
+
+    proc print data=_vvcramersrt width=min;
+    run;quit;
+
+%mend _vdo_cmh;
+
+%*_vdo_cmh(
+       lib=work
+      ,mem=tstdat
+      ,maxval=2000
+      ,maxvar=30
+     );
+
 *****    *    ****    ***   *   *  *****
   *     * *    *  *  *   *  **  *  *
   *    *   *   *  *  *   *  * * *  *
