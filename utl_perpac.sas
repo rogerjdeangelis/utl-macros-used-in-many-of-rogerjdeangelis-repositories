@@ -15,7 +15,33 @@ Python functions and code can be alsi be executed by mouse keys.
 * just put this in your autoexcec;
 %inc "c:/oto/utl_perpac.sas";
 */
+%macro avgby /cmd parmbuff
+   des="highlight dataset and type frqh sex on command line for a frequency on sex";
+   %let argx=&syspbuff;
+   store;note;notesubmit '%avgbya;';
+   run;
+%mend avgby;
 
+%macro avgbya;
+   options ls=255;
+   filename clp clipbrd ;
+   data _null_;
+     infile clp;
+     input;
+     put _infile_;
+     call symputx('argd',_infile_);
+     call symputx("__dtetym",put(datetime(),datetime23.));
+   run;
+   dm "out;clear;";
+   options nocenter;
+   footnote;
+   title1 "frequency of &argx datasets &argd &__dtetym";
+   proc means data=&argd missing n nmiss sum mean min q1 median q3 max;
+   class &argx;
+   run;
+   title;
+   dm "out;top;";
+%mend avgbya;
 %macro utl_submit_r32(                                                                                          
       pgmx                                                                                                      
      ,returnVar=N           /* set to Y if you want a return SAS macro variable from python */                  
