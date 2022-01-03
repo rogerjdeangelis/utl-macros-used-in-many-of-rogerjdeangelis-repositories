@@ -6,7 +6,7 @@
             data __ren001;                                                                  
                set &dsn(obs=1);                                                             
             run;quit;                                                                       
-            proc transpose data=__ren001 out=__ren002(drop=col1);                           
+            proc transpose data=__ren001 out=__ren002;                           
               var _all_;                                                                    
             run;quit;                                                                       
             proc sql;                                                                       
