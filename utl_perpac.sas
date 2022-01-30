@@ -15,33 +15,7 @@ Python functions and code can be alsi be executed by mouse keys.
 * just put this in your autoexcec;
 %inc "c:/oto/utl_perpac.sas";
 */
-%macro avgby /cmd parmbuff
-   des="highlight dataset and type frqh sex on command line for a frequency on sex";
-   %let argx=&syspbuff;
-   store;note;notesubmit '%avgbya;';
-   run;
-%mend avgby;
 
-%macro avgbya;
-   options ls=255;
-   filename clp clipbrd ;
-   data _null_;
-     infile clp;
-     input;
-     put _infile_;
-     call symputx('argd',_infile_);
-     call symputx("__dtetym",put(datetime(),datetime23.));
-   run;
-   dm "out;clear;";
-   options nocenter;
-   footnote;
-   title1 "frequency of &argx datasets &argd &__dtetym";
-   proc means data=&argd missing n nmiss sum mean min q1 median q3 max;
-   class &argx;
-   run;
-   title;
-   dm "out;top;";
-%mend avgbya;
 %macro utl_submit_r32(                                                                                          
       pgmx                                                                                                      
      ,returnVar=N           /* set to Y if you want a return SAS macro variable from python */                  
@@ -505,25 +479,7 @@ Python functions and code can be alsi be executed by mouse keys.
 
 
 
-%macro avgh / cmd
-   des="highlight dataset or view in the classic editor and type avgh on command line for proc means";
-   store;note;notesubmit '%avgha;';
-   run;
-%mend avgh;
-
-%macro avgha;
-   filename clp clipbrd ;
-   data _null_;
-     infile clp;
-     input;
-     _infile_=upcase(_infile_);
-     call symputx("__dtetym",put(datetime(),datetime23.)); 
-     cmd=catx(' ',
-          'proc means data=',_infile_,'n nmiss sum mean min q1 median q3 max;'
-         ,'Title SAS daatset',_infile_,"&__dtetym",';run;quit');      
-     call execute (cmd);
-   run;
-%mend avgha;
++
 
 
 
@@ -969,6 +925,7 @@ dm "out;top;";
 
 
 %macro conha;
+dm "out;clear;";
 FILENAME clp clipbrd ;
 DATA _NULL_;
   INFILE clp;
@@ -2753,8 +2710,40 @@ store;
 
     options noxwait noxsync;
     /* Open Excel */
-    x "'C:\Program Files\Microsoft Office\OFFICE14\excel.exe' %sysfunc(getoption(work))/_rpt.xlsx";
+    x "'C:\Program Files (x86)\Microsoft Office\root\Office16\excel.exe' %sysfunc(getoption(work))/_rpt.xlsx"; 
     run;quit;
 
 %mend xlra;
+
+%macro avgby /cmd parmbuff                                                         
+   des="highlight dataset and type sex age to get proc means by sex for age";      
+   %symdel argd arg1 arg2 / nowarn;                                                
+   %let arg1=%scan(&syspbuff,1,%str( ));                                           
+   %let arg2=%scan(&syspbuff,2,%str( ));                                           
+   store;note;notesubmit '%avgbya;';                                               
+   run;                                                                            
+%mend avgby;                                                                       
+                                                                                   
+%macro avgbya;                                                                     
+   filename clp clipbrd ;                                                          
+   data _null_;                                                                    
+     infile clp;                                                                   
+     input;                                                                        
+     put _infile_;                                                                 
+     call symputx('argd',_infile_);                                                
+     call symputx("__dtetym",put(datetime(),datetime23.));                         
+   run;                                                                            
+   dm "out;clear;";                                                                
+   options nocenter;                                                               
+   footnote;                                                                       
+   title1 "-- MEANS of &arg2 by &arg1 for dataset &argd &__dtetym --";             
+   proc means data=&argd  n nmiss sum mean std min q1 median q3 max;               
+   class &arg1;                                                                    
+   var &arg2.;                                                                     
+   run;                                                                            
+   title;                                                                          
+   dm "out;top;";                                                                  
+%mend avgbya;                                                                      
+                                                                                   
+
                                                                                                   
