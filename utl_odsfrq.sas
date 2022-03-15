@@ -72,8 +72,6 @@
 
         %utlfkil(%sysfunc(pathname(work))/_tmp1_.txt);
         %utlfkil(%sysfunc(pathname(work))/_tmp2_.txt);
-        
-        OPTIONS FORMCHAR="|----|+|---+=|-/\<>*";
 
    %end;
 
