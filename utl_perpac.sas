@@ -2701,7 +2701,7 @@ store;
                embedded_footnoteS         = "yes"
                );
 
-    proc report data=&argx missing;
+    proc report data=&argx missing style(column)=[textalign=left verticalalign=top];;
     run;quit;
 
     ods excel close;
@@ -2710,10 +2710,11 @@ store;
 
     options noxwait noxsync;
     /* Open Excel */
-    x "'C:\Program Files (x86)\Microsoft Office\root\Office16\excel.exe' %sysfunc(getoption(work))/_rpt.xlsx"; 
+    x "'C:\Program Files\Microsoft Office\OFFICE14\excel.exe' %sysfunc(getoption(work))/_rpt.xlsx";
     run;quit;
 
 %mend xlra;
+
 
 %macro avgby /cmd parmbuff                                                         
    des="highlight dataset and type sex age to get proc means by sex for age";      
