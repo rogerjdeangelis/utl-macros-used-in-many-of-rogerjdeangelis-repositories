@@ -15,46 +15,74 @@ Python functions and code can be alsi be executed by mouse keys.
 * just put this in your autoexcec;
 %inc "c:/oto/utl_perpac.sas";
 */
+%macro avgby /cmd parmbuff
+   des="highlight dataset and type frqh sex on command line for a frequency on sex";
+   %let argx=&syspbuff;
+   store;note;notesubmit '%avgbya;';
+   run;
+%mend avgby;
 
-%macro utl_submit_r32(                                                                                          
-      pgmx                                                                                                      
-     ,returnVar=N           /* set to Y if you want a return SAS macro variable from python */                  
-     )/des="Semi colon separated set of R commands - drop down to R";                                           
-  * write the program to a temporary file;                                                                      
-  %utlfkil(c:/temp/r_pgm.txt);                                                                                  
-  filename r_pgm "c:/temp/r_pgm.txt" lrecl=32766 recfm=v;  /* fails with work directory */                      
-  data _null_;                                                                                                  
-    length pgm $32756;                                                                                          
-    file r_pgm;                                                                                                 
-    pgm=&pgmx;                                                                                                  
-    put pgm;                                                                                                    
-    putlog pgm;                                                                                                 
-  run;                                                                                                          
-  %let __loc=%sysfunc(pathname(r_pgm));                                                                         
-  * pipe file through R;                                                                                        
-  filename rut pipe "C:\Progra~1\R\R-4.0.2\bin\i386\R.exe --vanilla --quiet --no-save < c:/temp/r_pgm.txt";     
-  data _null_;                                                                                                  
-    file print;                                                                                                 
-    infile rut recfm=v lrecl=32756;                                                                             
-    input;                                                                                                      
-    put _infile_;                                                                                               
-    putlog _infile_;                                                                                            
-  run;                                                                                                          
-  filename rut clear;                                                                                           
-  filename r_pgm clear;                                                                                         
-                                                                                                                
-  * use the clipboard to create macro variable;                                                                 
-  %if %upcase(%substr(&returnVar.,1,1)) ne N %then %do;                                                         
-    filename clp clipbrd ;                                                                                      
-    data _null_;                                                                                                
-     length txt $200;                                                                                           
-     infile clp;                                                                                                
-     input;                                                                                                     
-     putlog "macro variable &returnVar = " _infile_;                                                            
-     call symputx("&returnVar.",_infile_,"G");                                                                  
-    run;quit;                                                                                                   
-  %end;                                                                                                         
-                                                                                                                
+%macro avgbya;
+   options ls=255;
+   filename clp clipbrd ;
+   data _null_;
+     infile clp;
+     input;
+     put _infile_;
+     call symputx('argd',_infile_);
+     call symputx("__dtetym",put(datetime(),datetime23.));
+   run;
+   dm "out;clear;";
+   options nocenter;
+   footnote;
+   title1 "frequency of &argx datasets &argd &__dtetym";
+   proc means data=&argd missing n nmiss sum mean min q1 median q3 max;
+   class &argx;
+   run;
+   title;
+   dm "out;top;";
+%mend avgbya;
+
+
+%macro utl_submit_r32(
+      pgmx
+     ,returnVar=N           /* set to Y if you want a return SAS macro variable from python */
+     )/des="Semi colon separated set of R commands - drop down to R";
+  * write the program to a temporary file;
+  %utlfkil(c:/temp/r_pgm.txt);
+  filename r_pgm "c:/temp/r_pgm.txt" lrecl=32766 recfm=v;  /* fails with work directory */
+  data _null_;
+    length pgm $32756;
+    file r_pgm;
+    pgm=&pgmx;
+    put pgm;
+    putlog pgm;
+  run;
+  %let __loc=%sysfunc(pathname(r_pgm));
+  * pipe file through R;
+  filename rut pipe "C:\Progra~1\R\R-4.0.2\bin\i386\R.exe --vanilla --quiet --no-save < c:/temp/r_pgm.txt";
+  data _null_;
+    file print;
+    infile rut recfm=v lrecl=32756;
+    input;
+    put _infile_;
+    putlog _infile_;
+  run;
+  filename rut clear;
+  filename r_pgm clear;
+
+  * use the clipboard to create macro variable;
+  %if %upcase(%substr(&returnVar.,1,1)) ne N %then %do;
+    filename clp clipbrd ;
+    data _null_;
+     length txt $200;
+     infile clp;
+     input;
+     putlog "macro variable &returnVar = " _infile_;
+     call symputx("&returnVar.",_infile_,"G");
+    run;quit;
+  %end;
+
 %mend utl_submit_r32;
 %macro xit/
   cmd
@@ -69,151 +97,151 @@ Python functions and code can be alsi be executed by mouse keys.
 %mend cuth;
 
 
-%macro tailh /cmd des="lat 10 obs from highlighted dataset";                                                                                      
-   store;note;notesubmit '%tailha;';                                                                                                              
-%mend tailh;                                                                                                                                      
-                                                                                                                                                  
-%macro tailha /cmd des="last 10 obs highlight dataset and type tailha for a list of 10 obs";                                                      
-  FILENAME clp clipbrd ;                                                                                                                          
-  DATA _NULL_;                                                                                                                                    
-    INFILE clp;                                                                                                                                   
-    INPUT;                                                                                                                                        
-    put _infile_;                                                                                                                                 
-    call symputx('argx',_infile_);                                                                                                                
-  RUN;                                                                                                                                            
-  footnote;                                                                                                                                       
-  options nocenter;                                                                                                                               
-  %utlfkil("%sysfunc(pathname(work))/__dm.txt");                                                                                                  
-  proc sql noprint;                                                                                                                               
-        select                                                                                                                                    
-           put(count(*),comma18.)                                                                                                                 
-          ,count(*)                                                                                                                               
-        into                                                                                                                                      
-          :tob  trimmed                                                                                                                           
-         ,:tobs  trimmed                                                                                                                          
-  from &argx;quit;                                                                                                                                
-  data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;                                                                         
-  title "last 41 obs from %upcase(&argx) total obs=&tob &__dtetym";                                                                               
-  proc printto print="%sysfunc(pathname(work))/__dm.txt";                                                                                         
-  %let pobs=%sysfunc(ifn(&tobs > 40, %eval(&tobs - 40),1));                                                                                       
-  proc print data=&argx ( firstObs= &pobs ) width=min uniform  heading=horizontal;                                                                
-  format _all_;                                                                                                                                   
-  run;                                                                                                                                            
-  proc printto;                                                                                                                                   
-  run;quit;                                                                                                                                       
-  title;                                                                                                                                          
-  filename __dm clipbrd ;                                                                                                                         
-  data _null_;file _dm; put "";run;quit;                                                                                                          
-  data _null_;                                                                                                                                    
-     infile "%sysfunc(pathname(work))/__dm.txt" end=dne;                                                                                          
-     input;                                                                                                                                       
-     file __dm ;                                                                                                                                  
-     put _infile_;                                                                                                                                
-     file print;                                                                                                                                  
-     put _infile_;                                                                                                                                
-  run;quit;                                                                                                                                       
-  filename __dm clear;                                                                                                                            
-  run;quit;                                                                                                                                       
-  title;                                                                                                                                          
-  dm "out;";                                                                                                                                      
-%mend tailha;                                                                                                                                     
-                                                                                                                                                  
-                                                                                                                                                  
-%macro tail /cmd des="last 10 obs from last dataset";                                                                                             
-   note;gsubmit '%taila;';                                                                                                                        
-%mend tail;                                                                                                                                       
-                                                                                                                                                  
-                                                                                                                                                  
-%macro taila /cmd des="last 10 obs highlight";                                                                                                    
-  %put XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;                                                                                                         
-  footnote;                                                                                                                                       
-  options nocenter;                                                                                                                               
-  %utlfkil("%sysfunc(pathname(work))/__dm.txt");                                                                                                  
-  proc sql noprint;                                                                                                                               
-        select                                                                                                                                    
-           put(count(*),comma18.)                                                                                                                 
-          ,count(*)                                                                                                                               
-        into                                                                                                                                      
-          :tob  trimmed                                                                                                                           
-         ,:tobs  trimmed                                                                                                                          
-  from _last_;quit;                                                                                                                               
-  data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;                                                                         
-  title "last 41 obs from%upcase(%sysfunc(getoption(_last_))) total obs=&tob &__dtetym";                                                          
-  proc printto print="%sysfunc(pathname(work))/__dm.txt";                                                                                         
-  %let pobs=%sysfunc(ifn(&tobs > 40, %eval(&tobs - 40),1));                                                                                       
-  proc print data=_last_ ( firstObs= &pobs ) width=min uniform  heading=horizontal;                                                               
-  format _all_;                                                                                                                                   
-  run;                                                                                                                                            
-  proc printto;                                                                                                                                   
-  run;quit;                                                                                                                                       
-  title;                                                                                                                                          
-  filename __dm clipbrd ;                                                                                                                         
-  data _null_;file _dm; put "";run;quit;                                                                                                          
-  data _null_;                                                                                                                                    
-     infile "%sysfunc(pathname(work))/__dm.txt" end=dne;                                                                                          
-     input;                                                                                                                                       
-     file __dm ;                                                                                                                                  
-     put _infile_;                                                                                                                                
-     file print;                                                                                                                                  
-     put _infile_;                                                                                                                                
-  run;quit;                                                                                                                                       
-  filename __dm clear;                                                                                                                            
-  run;quit;                                                                                                                                       
-  title;                                                                                                                                          
-  dm "out;";                                                                                                                                      
-%mend taila;                                                                                                                                      
-                                                                                                                                                  
-                                                                                                                                                  
-                                                                                                                                                  
-%macro tailfh /cmd des="lat 10 obs from highlighted dataset";                                                                                     
-   store;note;notesubmit '%tailfha;';                                                                                                             
-%mend tailfh;                                                                                                                                     
-                                                                                                                                                  
-%macro tailfha /cmd des="last 10 obs highlight dataset and type tailfha for a list of 10 obs";                                                    
-  FILENAME clp clipbrd ;                                                                                                                          
-  DATA _NULL_;                                                                                                                                    
-    INFILE clp;                                                                                                                                   
-    INPUT;                                                                                                                                        
-    put _infile_;                                                                                                                                 
-    call symputx('argx',_infile_);                                                                                                                
-  RUN;                                                                                                                                            
-  footnote;                                                                                                                                       
-  options nocenter;                                                                                                                               
-  %utlfkil("%sysfunc(pathname(work))/__dm.txt");                                                                                                  
-  data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;                                                                         
-  proc sql noprint;                                                                                                                               
-        select                                                                                                                                    
-           put(count(*),comma18.)                                                                                                                 
-          ,count(*)                                                                                                                               
-        into                                                                                                                                      
-          :tob  trimmed                                                                                                                           
-         ,:tobs  trimmed                                                                                                                          
-  from &argx;quit;                                                                                                                                
-  title "last 11 obs from %upcase(&argx) total obs=&tob &__dtetym";                                                                               
-  proc printto print="%sysfunc(pathname(work))/__dm.txt";                                                                                         
-  %let pobs=%sysfunc(ifn(&tobs > 10, %eval(&tobs - 10),1));                                                                                       
-  proc print data=&argx ( firstObs= &pobs ) width=min uniform  heading=horizontal;                                                                
-  run;                                                                                                                                            
-  proc printto;                                                                                                                                   
-  run;quit;                                                                                                                                       
-  title;                                                                                                                                          
-  filename __dm clipbrd ;                                                                                                                         
-  data _null_;file _dm; put "";run;quit;                                                                                                          
-  data _null_;                                                                                                                                    
-     infile "%sysfunc(pathname(work))/__dm.txt" end=dne;                                                                                          
-     input;                                                                                                                                       
-     file __dm ;                                                                                                                                  
-     put _infile_;                                                                                                                                
-     file print;                                                                                                                                  
-     put _infile_;                                                                                                                                
-  run;quit;                                                                                                                                       
-  filename __dm clear;                                                                                                                            
-  run;quit;                                                                                                                                       
-  title;                                                                                                                                          
-  dm "out;";                                                                                                                                      
-%mend tailfha;                                                                                                                                    
-                                                                                                                                                  
-                                                                             
+%macro tailh /cmd des="lat 10 obs from highlighted dataset";
+   store;note;notesubmit '%tailha;';
+%mend tailh;
+
+%macro tailha /cmd des="last 10 obs highlight dataset and type tailha for a list of 10 obs";
+  FILENAME clp clipbrd ;
+  DATA _NULL_;
+    INFILE clp;
+    INPUT;
+    put _infile_;
+    call symputx('argx',_infile_);
+  RUN;
+  footnote;
+  options nocenter;
+  %utlfkil("%sysfunc(pathname(work))/__dm.txt");
+  proc sql noprint;
+        select
+           put(count(*),comma18.)
+          ,count(*)
+        into
+          :tob  trimmed
+         ,:tobs  trimmed
+  from &argx;quit;
+  data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;
+  title "last 41 obs from %upcase(&argx) total obs=&tob &__dtetym";
+  proc printto print="%sysfunc(pathname(work))/__dm.txt";
+  %let pobs=%sysfunc(ifn(&tobs > 40, %eval(&tobs - 40),1));
+  proc print data=&argx ( firstObs= &pobs ) width=min uniform  heading=horizontal;
+  format _all_;
+  run;
+  proc printto;
+  run;quit;
+  title;
+  filename __dm clipbrd ;
+  data _null_;file _dm; put "";run;quit;
+  data _null_;
+     infile "%sysfunc(pathname(work))/__dm.txt" end=dne;
+     input;
+     file __dm ;
+     put _infile_;
+     file print;
+     put _infile_;
+  run;quit;
+  filename __dm clear;
+  run;quit;
+  title;
+  dm "out;";
+%mend tailha;
+
+
+%macro tail /cmd des="last 10 obs from last dataset";
+   note;gsubmit '%taila;';
+%mend tail;
+
+
+%macro taila /cmd des="last 10 obs highlight";
+  %put XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;
+  footnote;
+  options nocenter;
+  %utlfkil("%sysfunc(pathname(work))/__dm.txt");
+  proc sql noprint;
+        select
+           put(count(*),comma18.)
+          ,count(*)
+        into
+          :tob  trimmed
+         ,:tobs  trimmed
+  from _last_;quit;
+  data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;
+  title "last 41 obs from%upcase(%sysfunc(getoption(_last_))) total obs=&tob &__dtetym";
+  proc printto print="%sysfunc(pathname(work))/__dm.txt";
+  %let pobs=%sysfunc(ifn(&tobs > 40, %eval(&tobs - 40),1));
+  proc print data=_last_ ( firstObs= &pobs ) width=min uniform  heading=horizontal;
+  format _all_;
+  run;
+  proc printto;
+  run;quit;
+  title;
+  filename __dm clipbrd ;
+  data _null_;file _dm; put "";run;quit;
+  data _null_;
+     infile "%sysfunc(pathname(work))/__dm.txt" end=dne;
+     input;
+     file __dm ;
+     put _infile_;
+     file print;
+     put _infile_;
+  run;quit;
+  filename __dm clear;
+  run;quit;
+  title;
+  dm "out;";
+%mend taila;
+
+
+
+%macro tailfh /cmd des="lat 10 obs from highlighted dataset";
+   store;note;notesubmit '%tailfha;';
+%mend tailfh;
+
+%macro tailfha /cmd des="last 10 obs highlight dataset and type tailfha for a list of 10 obs";
+  FILENAME clp clipbrd ;
+  DATA _NULL_;
+    INFILE clp;
+    INPUT;
+    put _infile_;
+    call symputx('argx',_infile_);
+  RUN;
+  footnote;
+  options nocenter;
+  %utlfkil("%sysfunc(pathname(work))/__dm.txt");
+  data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;
+  proc sql noprint;
+        select
+           put(count(*),comma18.)
+          ,count(*)
+        into
+          :tob  trimmed
+         ,:tobs  trimmed
+  from &argx;quit;
+  title "last 11 obs from %upcase(&argx) total obs=&tob &__dtetym";
+  proc printto print="%sysfunc(pathname(work))/__dm.txt";
+  %let pobs=%sysfunc(ifn(&tobs > 10, %eval(&tobs - 10),1));
+  proc print data=&argx ( firstObs= &pobs ) width=min uniform  heading=horizontal;
+  run;
+  proc printto;
+  run;quit;
+  title;
+  filename __dm clipbrd ;
+  data _null_;file _dm; put "";run;quit;
+  data _null_;
+     infile "%sysfunc(pathname(work))/__dm.txt" end=dne;
+     input;
+     file __dm ;
+     put _infile_;
+     file print;
+     put _infile_;
+  run;quit;
+  filename __dm clear;
+  run;quit;
+  title;
+  dm "out;";
+%mend tailfha;
+
+
 
 
 
@@ -270,7 +298,7 @@ Python functions and code can be alsi be executed by mouse keys.
     INPUT;
     put _infile_;
     call symputx('argx',_infile_);
-    call symputx("__dtetym",put(datetime(),datetime23.)); 
+    call symputx("__dtetym",put(datetime(),datetime23.));
   RUN;
   dm "out;clear;";
   footnote;
@@ -457,29 +485,51 @@ Python functions and code can be alsi be executed by mouse keys.
 
 %mend utlfkil;
 
-%macro sumr / cmd parmbuff                                                                                   
-    des="highlight row of numeric variables and type sumh on command line for proc means using last dataset";
-    store;note;notesubmit '%sumra;';                                                                         
-   run;                                                                                                      
-%mend sumr;                                                                                                  
-                                                                                                             
-%macro sumra;                                                                                                
-   filename clp clipbrd ;                                                                                    
-   data _null_;                                                                                              
-     infile clp;                                                                                             
-     input;                                                                                                  
-     row=translate(_infile_,'+',' ');                                                                        
-     call symputx('row',row);                                                                                
-   run;                                                                                                      
-   %let sum=%sysevalf(&row);                                                                                 
-   %put &=sum;                                                                                               
-%mend sumra;                                                                                                 
-                                                                                                             
+%macro sumr / cmd parmbuff
+    des="highlight row of numeric variables and type sumr on command line for proc means using last dataset";
+    store;note;notesubmit '%sumra;';
+   run;
+%mend sumr;
+
+%macro sumra;
+   filename clp clipbrd ;
+   data _null_;
+     file print;
+     infile clp;
+     input;
+     _infile_=trim(_infile_);
+     row=translate(_infile_,'+',' ');
+     call symputx('row',row);
+     rc=dosubl('
+        data  _null_;
+           sumrow=&row;
+           file print;
+             put // sumrow= //;
+        run;quit;
+        ');
+   run;
+%mend sumra;
 
 
+%macro avgh / cmd
+   des="highlight dataset or view in the classic editor and type avgh on command line for proc means";
+   store;note;notesubmit '%avgha;';
+   run;
+%mend avgh;
 
-
-+
+%macro avgha;
+   filename clp clipbrd ;
+   data _null_;
+     infile clp;
+     input;
+     _infile_=upcase(_infile_);
+     call symputx("__dtetym",put(datetime(),datetime23.));
+     cmd=catx(' ',
+          'proc means data=',_infile_,'n nmiss sum mean min q1 median q3 max;'
+         ,'Title SAS daatset',_infile_,"&__dtetym",';run;quit');
+     call execute (cmd);
+   run;
+%mend avgha;
 
 
 
@@ -703,9 +753,9 @@ des="type frq sex*sage on command line for a crosspatb frequency on sex*age for 
    *rsubmit;
    options nocenter;
    footnote;
-   data _null_;                                            
-      call symputx("__dtetym",put(datetime(),datetime23.)); 
-   run;quit;                                               
+   data _null_;
+      call symputx("__dtetym",put(datetime(),datetime23.));
+   run;quit;
 
    title1 "Frequency of &argx datasets %sysfunc(getoption(_last_)) &__dtetym";
    proc freq data=_last_ levels;
@@ -716,48 +766,48 @@ des="type frq sex*sage on command line for a crosspatb frequency on sex*age for 
    dm "out;top;";
 %mend frqa;
 
-%macro cnth /cmd parmbuff;                                                                                                       
-   %local _vars;                                                                                                                 
-   %let _vars=&syspbuff;                                                                                                         
-   %put _vars=&_vars;                                                                                                            
-   %* add comma for sql;                                                                                                         
-   %let _vars=%sysfunc(translate(&_vars,%str(,),%str( )));                                                                       
-   store;note;notesubmit '%cntha;';                                                                                              
-   run;                                                                                                                          
-%mend cnth;                                                                                                                      
-                                                                                                                                 
-%macro cntha;                                                                                                                    
-                                                                                                                                 
-   %local _cnt_ _obs_;                                                                                                           
-                                                                                                                                 
-   filename clp clipbrd ;                                                                                                        
-   data _null_;                                                                                                                  
-     infile clp;                                                                                                                 
-     input;                                                                                                                      
-     put _infile_;                                                                                                               
-     call symputx('_sasdataset',_infile_);                                                                                       
-     call symputx("__dtetym",put(datetime(),datetime23.));                                                                       
-   run;                                                                                                                          
-                                                                                                                                 
-   %put &=_sasdataset;                                                                                                           
-   %put &=_vars;                                                                                                                 
-                                                                                                                                 
-   proc sql noprint;                                                                                                             
-    select put(count(*), comma18.) into :_cnt_ separated by '' from ( select distinct &_vars from &_sasdataset);                 
-    select put(count(*), comma18.) into :_obs_ separated by '' from &_sasdataset;                                                
-   quit;                                                                                                                         
-                                                                                                                                 
-   %put "----- Number of unique levels=&_cnt_ for &_vars from &_sasdataset (obs=&_obs_) -----";                                  
-                                                                                                                                 
-  filename __dm clipbrd ;                                                                                                        
-  data _null_;file __dm; put "";run;quit;                                                                                        
-  data _null_;file __dm; put "----- Number of unique levels=&_cnt_ for &_vars from &_sasdataset (obs=&_obs_) &__dtetym -----";   
-  run;quit;                                                                                                                      
-  filename __dm clear;                                                                                                           
-run;quit;                                                                                                                        
-title;                                                                                                                           
-%mend cntha;                                                                                                                     
-                                                                                   
+%macro cnth /cmd parmbuff;
+   %local _vars;
+   %let _vars=&syspbuff;
+   %put _vars=&_vars;
+   %* add comma for sql;
+   %let _vars=%sysfunc(translate(&_vars,%str(,),%str( )));
+   store;note;notesubmit '%cntha;';
+   run;
+%mend cnth;
+
+%macro cntha;
+
+   %local _cnt_ _obs_;
+
+   filename clp clipbrd ;
+   data _null_;
+     infile clp;
+     input;
+     put _infile_;
+     call symputx('_sasdataset',_infile_);
+     call symputx("__dtetym",put(datetime(),datetime23.));
+   run;
+
+   %put &=_sasdataset;
+   %put &=_vars;
+
+   proc sql noprint;
+    select put(count(*), comma18.) into :_cnt_ separated by '' from ( select distinct &_vars from &_sasdataset);
+    select put(count(*), comma18.) into :_obs_ separated by '' from &_sasdataset;
+   quit;
+
+   %put "----- Number of unique levels=&_cnt_ for &_vars from &_sasdataset (obs=&_obs_) -----";
+
+  filename __dm clipbrd ;
+  data _null_;file __dm; put "";run;quit;
+  data _null_;file __dm; put "----- Number of unique levels=&_cnt_ for &_vars from &_sasdataset (obs=&_obs_) &__dtetym -----";
+  run;quit;
+  filename __dm clear;
+run;quit;
+title;
+%mend cntha;
+
 
 
 %macro cnt /cmd parmbuff;
@@ -925,7 +975,6 @@ dm "out;top;";
 
 
 %macro conha;
-dm "out;clear;";
 FILENAME clp clipbrd ;
 DATA _NULL_;
   INFILE clp;
@@ -1057,43 +1106,22 @@ dm "vt &argx"  COLHEADING=NAMES;
 %mend iota;
 
 
-%macro iotb
-/ des="Called by utliota n integers in editor";
-
-%local ui;
-%let urc=%sysfunc(filename(utliotb1,"work.utliotb1.utliotb1.catams"));
-
-%put urc=&urc;
-
-%let ufid = %sysfunc(fopen(&utliotb1,o));
-
-%do ui = 1 %to &utliota1;
-
-%let uzdec = %sysfunc(putn(&ui,z%length(&utliota1)..));
-
-%let urc=%sysfunc(fput(&ufid,&uzdec));
-
-%let urc=%sysfunc(fwrite(&ufid));
-
-%end;
-
-%let urc=%sysfunc(fclose(&ufid));
-
-%let urc=%sysfunc(filename(utliotb1));
-
-dm "inc 'work.utliotb1.utliotb1.catams'";
-
-%mend iotb;
-
-
-
-
-
-
-
-
-
-
+%macro iota(_end)/cmd
+   des="type iota 10 and a list or 01 02 02 - 10 will be added to the editor";
+   %let len=%length(&_end);
+   rc=%sysfunc(dosubl('
+      filename _clp clipbrd;
+      data _null_;
+         do i=1 to &_end;
+           file _clp;
+           res=put(i,z&len..);
+           put res;
+           file print;
+           put res;
+         end;
+         '));
+      run;quit;
+%mend iota;
 
 
 %macro xplo ( AFSTR1 )/cmd des="type xplo ONEaTWO and exploded letters will be saved in past buffer";
@@ -1411,114 +1439,114 @@ note;notesubmit '%xpya';
 
 %mend xpy;
 
-%macro xpy()/cmd parmbuff;                                                       
-                                                                                 
-%let afstr1=&syspbuff;                                                           
-                                                                                 
-/*-----------------------------------------*\                                    
-|  xplo %str(ONE TWO THREE)                 |                                    
-|  lower case letters produce spaces        |                                    
-\*-----------------------------------------*/                                    
-                                                                                 
-note;notesubmit '%xpya';                                                         
-                                                                                 
-%mend xpy;                                                                       
-                                                                                 
-%macro xpya                                                                      
-/  des = "Exploded Banner for Printouts";                                        
-                                                                                 
-%local uj revslash;                                                              
-                                                                                 
-options noovp;                                                                   
-title;                                                                           
-footnote;                                                                        
-                                                                                 
-data _null_;                                                                     
-   rc=filename('__xplp', "%sysfunc(pathname(work))/__xplp");                     
-   if rc = 0 and fexist('__xplo') then rc=fdelete('__xplp');                     
-   rc=filename('__xplp');                                                        
-run;                                                                             
-                                                                                 
-%let revslash=%sysfunc(translate(%sysfunc(pathname(work)),'/','\'));             
-%put &=revslash;                                                                 
-run;quit;                                                                        
-                                                                                 
-* note uou can altename single and double quotes;                                
-%utl_submit_py64_38(resolve('                                                    
-import sys;                                                                      
-from pyfiglet import figlet_format;                                              
-txt=figlet_format("&afstr1.", font="standard");                                  
-with open("&revslash./__xplp", "w") as f:;                                       
-.    f.write(txt);                                                               
-'));                                                                             
-                                                                                 
-filename __dm clipbrd ;                                                          
-                                                                                 
-   data _null_;                                                                  
-     infile "%sysfunc(pathname(work))/__xplp" end=dne;                           
-     file __dm;                                                                  
-     input;                                                                      
-     _infile_=translate(_infile_,"`","'");                                       
-     if _n_=1 then substr(_infile_,1,2)='/*';                                    
-     putlog _infile_;                                                            
-     put _infile_;                                                               
-     if dne then do;                                                             
-        put '*/';                                                                
-        putlog '*/';                                                             
-     end;                                                                        
-   run;                                                                          
-                                                                                 
-filename __dm clear;                                                             
-                                                                                 
-%mend xpya;                                                                                
+%macro xpy()/cmd parmbuff;
+
+%let afstr1=&syspbuff;
+
+/*-----------------------------------------*\
+|  xplo %str(ONE TWO THREE)                 |
+|  lower case letters produce spaces        |
+\*-----------------------------------------*/
+
+note;notesubmit '%xpya';
+
+%mend xpy;
+
+%macro xpya
+/  des = "Exploded Banner for Printouts";
+
+%local uj revslash;
+
+options noovp;
+title;
+footnote;
+
+data _null_;
+   rc=filename('__xplp', "%sysfunc(pathname(work))/__xplp");
+   if rc = 0 and fexist('__xplo') then rc=fdelete('__xplp');
+   rc=filename('__xplp');
+run;
+
+%let revslash=%sysfunc(translate(%sysfunc(pathname(work)),'/','\'));
+%put &=revslash;
+run;quit;
+
+* note uou can altename single and double quotes;
+%utl_submit_py64_310(resolve('
+import sys;
+from pyfiglet import figlet_format;
+txt=figlet_format("&afstr1.", font="standard");
+with open("&revslash./__xplp", "w") as f:;
+.    f.write(txt);
+'));
+
+filename __dm clipbrd ;
+
+   data _null_;
+     infile "%sysfunc(pathname(work))/__xplp" end=dne;
+     file __dm;
+     input;
+     _infile_=translate(_infile_,"`","'");
+     if _n_=1 then substr(_infile_,1,2)='/*';
+     putlog _infile_;
+     put _infile_;
+     if dne then do;
+        put '*/';
+        putlog '*/';
+     end;
+   run;
+
+filename __dm clear;
+
+%mend xpya;
 
 
 
-%macro utl_submit_py64_38(                                                                                                                                                                                                                                      
-      pgm                                                                                                                                                                                                                                                       
-     ,return=  /* name for the macro variable from Python */                                                                                                                                                                                                    
-     )/des="Semi colon separated set of python commands - drop down to python";                                                                                                                                                                                 
-                                                                                                                                                                                                                                                                
-  * write the program to a temporary file;                                                                                                                                                                                                                      
-  filename py_pgm "%sysfunc(pathname(work))/py_pgm.py" lrecl=32766 recfm=v;                                                                                                                                                                                     
-  data _null_;                                                                                                                                                                                                                                                  
-    length pgm  $32755 cmd $1024;                                                                                                                                                                                                                               
-    file py_pgm ;                                                                                                                                                                                                                                               
-    pgm=&pgm;                                                                                                                                                                                                                                                   
-    semi=countc(pgm,";");                                                                                                                                                                                                                                       
-      do idx=1 to semi;                                                                                                                                                                                                                                         
-        cmd=cats(scan(pgm,idx,";"));                                                                                                                                                                                                                            
-        if cmd=:". " then                                                                                                                                                                                                                                       
-           cmd=trim(substr(cmd,2));                                                                                                                                                                                                                             
-         put cmd $char384.;                                                                                                                                                                                                                                     
-         putlog cmd $char384.;                                                                                                                                                                                                                                  
-      end;                                                                                                                                                                                                                                                      
-  run;quit;                                                                                                                                                                                                                                                     
-  %let _loc=%sysfunc(pathname(py_pgm));                                                                                                                                                                                                                         
-  %put &_loc;                                                                                                                                                                                                                                                   
-  filename rut pipe  "c:\Python38\python.exe &_loc";                                                                                                                                                                                                   
-  data _null_;                                                                                                                                                                                                                                                  
-    file print;                                                                                                                                                                                                                                                 
-    infile rut;                                                                                                                                                                                                                                                 
-    input;                                                                                                                                                                                                                                                      
-    put _infile_;                                                                                                                                                                                                                                               
-  run;                                                                                                                                                                                                                                                          
-  filename rut clear;                                                                                                                                                                                                                                           
-  filename py_pgm clear;                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                
-  * use the clipboard to create macro variable;                                                                                                                                                                                                                 
-  %if "&return" ^= "" %then %do;                                                                                                                                                                                                                                
-    filename clp clipbrd ;                                                                                                                                                                                                                                      
-    data _null_;                                                                                                                                                                                                                                                
-     length txt $200;                                                                                                                                                                                                                                           
-     infile clp;                                                                                                                                                                                                                                                
-     input;                                                                                                                                                                                                                                                     
-     putlog "*******  " _infile_;                                                                                                                                                                                                                               
-     call symputx("&return",_infile_,"G");                                                                                                                                                                                                                      
-    run;quit;                                                                                                                                                                                                                                                   
-  %end;                                                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                                                
-%mend utl_submit_py64_38;            
+%macro utl_submit_py64_310(
+      pgm
+     ,return=  /* name for the macro variable from Python */
+     )/des="Semi colon separated set of python commands - drop down to python";
+
+  * write the program to a temporary file;
+  filename py_pgm "%sysfunc(pathname(work))/py_pgm.py" lrecl=32766 recfm=v;
+  data _null_;
+    length pgm  $32755 cmd $1024;
+    file py_pgm ;
+    pgm=&pgm;
+    semi=countc(pgm,";");
+      do idx=1 to semi;
+        cmd=cats(scan(pgm,idx,";"));
+        if cmd=:". " then
+           cmd=trim(substr(cmd,2));
+         put cmd $char384.;
+         putlog cmd $char384.;
+      end;
+  run;quit;
+  %let _loc=%sysfunc(pathname(py_pgm));
+  %put &_loc;
+  filename rut pipe  "d:\Python310\python.exe &_loc";
+  data _null_;
+    file print;
+    infile rut;
+    input;
+    put _infile_;
+  run;
+  filename rut clear;
+  filename py_pgm clear;
+
+  * use the clipboard to create macro variable;
+  %if "&return" ^= "" %then %do;
+    filename clp clipbrd ;
+    data _null_;
+     length txt $200;
+     infile clp;
+     input;
+     putlog "*******  " _infile_;
+     call symputx("&return",_infile_,"G");
+    run;quit;
+  %end;
+
+%mend utl_submit_py64_310;
 
 
 
@@ -1652,59 +1680,6 @@ run;quit;
 %mend utlfkil;
 
 
-%macro utl_submit_r64(
-      pgmx
-     ,returnVar=N           /* set to Y if you want a return SAS macro variable from python */
-     )/des="Semi colon separated set of R commands - drop down to R";
-  * write the program to a temporary file;
-
-  %let _wrkstm=C:/Users/rdeangelis/AppData/Local/Temp/SASTEM~1;
-  %let _subdir=%scan(%sysfunc(pathname(work)),-1,%str(\));
-  %put &=_subdir;
-  %let _dir=&_wrkstm./&_subdir;
-  %put &_dir;
-
-  filename r_pgm "c:/txt/r_pgm.txt" lrecl=32766 recfm=v;
-  data _null_;
-    length pgm $32756;
-    file r_pgm;
-    pgm=&pgmx;
-    put pgm;
-    putlog pgm;
-  run;
-  %let __loc=%sysfunc(pathname(r_pgm));
-  * pipe file through R;
-  filename rut pipe "C:\R400\bin\R.exe --vanilla --quiet --no-save < &__loc";
-  data _null_;
-    file print;
-    infile rut recfm=v lrecl=32756;
-    input;
-    put _infile_;
-    putlog _infile_;
-  run;
-  filename rut clear;
-  filename r_pgm clear;
-
-  * use the clipboard to create macro variable;
-  %if %upcase(%substr(&returnVar.,1,1)) ne N %then %do;
-    filename clp clipbrd ;
-    data _null_;
-     length txt $200;
-     infile clp;
-     input;
-     putlog "macro variable &returnVar = " _infile_;
-     call symputx("&returnVar.",_infile_,"G");
-    run;quit;
-  %end;
-
-%mend utl_submit_r64;
-
-/*
-%utl_submit_r64('
-  data(iris);
-  head(iris);
-');
-*/
 
 
 %macro utl_macrodelete(macro)/des="delete catalog macro entry";
@@ -2534,137 +2509,137 @@ RETURN;
 RUN;
 %mend para;
 
- %macro unqh(var)/cmd parmbuff                                                                          
-  des="Frquency and distinct counts. Usubjid is hardcoded and is in almost all FDA SDTMs";             
-  %let _vars=&syspbuff;                                                                                
-  store;note; notesubmit'%unqha;';                                                                     
-%mend unqh;                                                                                            
-                                                                                                       
-%macro unqha / des="highlight dataset and type ls40ha for a list of 40 obs";                           
-                                                                                                       
-  %local _sasdataset _dtetym;                                                                          
-                                                                                                       
-  FILENAME clp clipbrd ;                                                                               
-  DATA _NULL_;                                                                                         
-    INFILE clp;                                                                                        
-    INPUT;                                                                                             
-    put _infile_;                                                                                      
-    call symputx('_sasdataset',_infile_);                                                              
-    call symputx("__dtetym",put(datetime(),datetime23.));                                              
-  RUN;                                                                                                 
-                                                                                                       
-  /* %let _vars=visit;      */                                                                         
-  /* %let _sasdataset=have; */                                                                         
-                                                                                                       
-  %put &=_vars;                                                                                        
-  %put &=_sasdataset;                                                                                  
-                                                                                                       
-  %if %sysfunc(countw(&_vars))>1 %then %do;                                                            
-       %let _vars= %qsysfunc(translate(&_vars,%str(,),%str( )));                                       
-       %put _vars;                                                                                     
-  %end;                                                                                                
-                                                                                                       
-  %put &=_vars;                                                                                        
-  %put &=_sasdataset;                                                                                  
-                                                                                                       
-   proc datasets lib=work nodetails nolist;                                                            
-   delete __tmp;                                                                                       
-   run;quit;                                                                                           
-                                                                                                       
-   proc sql;                                                                                           
-      create                                                                                           
-         table __tmp as                                                                                
-      select                                                                                           
-         &_vars                                                                                        
-        ,count(distinct(usubjid)) as UNIQUE_USUBJID                                                    
-        ,count(*)                 as OBSEVATIONS                                                       
-      from                                                                                             
-        &_sasdataset                                                                                   
-      group                                                                                            
-        by &_vars                                                                                      
-   ;quit;                                                                                              
-                                                                                                       
-   %utlfkil(%sysfunc(pathname(work))/__dm.txt);                                                        
-                                                                                                       
-   options ls=130;                                                                                     
-   proc printto print="%sysfunc(pathname(work))/__dm.txt";                                             
-   proc print data=__tmp width=min;                                                                    
-   title "Dataset=&_sasdataset frequencies and distinct count for &_vars &__dtetym";                   
-   proc printto;                                                                                       
-   run;quit;                                                                                           
-                                                                                                       
-    title;                                                                                             
-   filename __dm clipbrd ;                                                                             
-   data _null_;file _dm; put "";run;quit;                                                              
-   data _null_;                                                                                        
-      infile "%sysfunc(pathname(work))/__dm.txt" end=dne;                                              
-      input;                                                                                           
-      file __dm ;                                                                                      
-      put _infile_;                                                                                    
-      file print;                                                                                      
-      put _infile_;                                                                                    
-   run;quit;                                                                                           
-   filename __dm clear;                                                                                
-   run;quit;                                                                                           
-                                                                                                       
-   title;                                                                                              
-   dm "out;";                                                                                          
-                                                                                                       
-%mend unqha;                                                                                           
-                                                                   
-                                                                                                                    
-                                                                                                                                                  
- %macro unq(var)/cmd parmbuff                                                                                 
- des="Frquency and distinct counts. Usubjid is hardcoded and is in almost all FDA SDTMs";                    
-                                                                                                             
-store;                                                                                                       
-                                                                                                             
-%symdel argx arg / nowarn;                                                                                   
-                                                                                                             
-%let argx=&syspbuff;                                                                                         
-                                                                                                             
-%if %sysfunc(countw(&argx))>1 %then %do;                                                                     
-     %let arg= %qsysfunc(translate(&argx,%str(,),%str( )));                                                  
-     %put &arg;                                                                                              
-%end;                                                                                                        
-%else %do;                                                                                                   
-    %let arg = &argx;                                                                                        
-%end;                                                                                                        
-                                                                                                             
-%let rc=%sysfunc(dosubl('                                                                                    
-                                                                                                             
-  proc datasets lib=work nodetails nolist;                                                                   
-   delete __temp;                                                                                            
-  run;quit;                                                                                                  
-                                                                                                             
-  FILENAME clp clipbrd ;                                                                                     
-  DATA _NULL_;                                                                                               
-    INFILE clp;                                                                                              
-    INPUT;                                                                                                   
-    put _infile_;                                                                                            
-    call symputx("__dtetym",put(datetime(),datetime23.));                                                    
-  RUN;                                                                                                       
-                                                                                                             
-  proc sql;                                                                                                  
-     create                                                                                                  
-        table __tmp as                                                                                       
-     select                                                                                                  
-        &arg                                                                                                 
-       ,count(distinct(usubjid)) as UNIQUE_USUBJID                                                           
-       ,count(*)                 as OBSEVATIONS                                                              
-     from                                                                                                    
-       &sas_dataset                                                                                          
-     group                                                                                                   
-       by &arg                                                                                               
-  ;quit;                                                                                                     
-  options ls=130;                                                                                            
-  proc print data=__tmp width=min;                                                                           
-  title "Dataset=%sysfunc(strip(&syslast)) frequencies and distinct count for &argx &__dtetym";              
-  '));                                                                                                       
-                                                                                                             
-  %symdel argx sas_dataset arg / nowarn;                                                                     
-                                                                                                             
-%mend unq; 
+ %macro unqh(var)/cmd parmbuff
+  des="Frquency and distinct counts. Usubjid is hardcoded and is in almost all FDA SDTMs";
+  %let _vars=&syspbuff;
+  store;note; notesubmit'%unqha;';
+%mend unqh;
+
+%macro unqha / des="highlight dataset and type ls40ha for a list of 40 obs";
+
+  %local _sasdataset _dtetym;
+
+  FILENAME clp clipbrd ;
+  DATA _NULL_;
+    INFILE clp;
+    INPUT;
+    put _infile_;
+    call symputx('_sasdataset',_infile_);
+    call symputx("__dtetym",put(datetime(),datetime23.));
+  RUN;
+
+  /* %let _vars=visit;      */
+  /* %let _sasdataset=have; */
+
+  %put &=_vars;
+  %put &=_sasdataset;
+
+  %if %sysfunc(countw(&_vars))>1 %then %do;
+       %let _vars= %qsysfunc(translate(&_vars,%str(,),%str( )));
+       %put _vars;
+  %end;
+
+  %put &=_vars;
+  %put &=_sasdataset;
+
+   proc datasets lib=work nodetails nolist;
+   delete __tmp;
+   run;quit;
+
+   proc sql;
+      create
+         table __tmp as
+      select
+         &_vars
+        ,count(distinct(usubjid)) as UNIQUE_USUBJID
+        ,count(*)                 as OBSEVATIONS
+      from
+        &_sasdataset
+      group
+        by &_vars
+   ;quit;
+
+   %utlfkil(%sysfunc(pathname(work))/__dm.txt);
+
+   options ls=130;
+   proc printto print="%sysfunc(pathname(work))/__dm.txt";
+   proc print data=__tmp width=min;
+   title "Dataset=&_sasdataset frequencies and distinct count for &_vars &__dtetym";
+   proc printto;
+   run;quit;
+
+    title;
+   filename __dm clipbrd ;
+   data _null_;file _dm; put "";run;quit;
+   data _null_;
+      infile "%sysfunc(pathname(work))/__dm.txt" end=dne;
+      input;
+      file __dm ;
+      put _infile_;
+      file print;
+      put _infile_;
+   run;quit;
+   filename __dm clear;
+   run;quit;
+
+   title;
+   dm "out;";
+
+%mend unqha;
+
+
+
+ %macro unq(var)/cmd parmbuff
+ des="Frquency and distinct counts. Usubjid is hardcoded and is in almost all FDA SDTMs";
+
+store;
+
+%symdel argx arg / nowarn;
+
+%let argx=&syspbuff;
+
+%if %sysfunc(countw(&argx))>1 %then %do;
+     %let arg= %qsysfunc(translate(&argx,%str(,),%str( )));
+     %put &arg;
+%end;
+%else %do;
+    %let arg = &argx;
+%end;
+
+%let rc=%sysfunc(dosubl('
+
+  proc datasets lib=work nodetails nolist;
+   delete __temp;
+  run;quit;
+
+  FILENAME clp clipbrd ;
+  DATA _NULL_;
+    INFILE clp;
+    INPUT;
+    put _infile_;
+    call symputx("__dtetym",put(datetime(),datetime23.));
+  RUN;
+
+  proc sql;
+     create
+        table __tmp as
+     select
+        &arg
+       ,count(distinct(usubjid)) as UNIQUE_USUBJID
+       ,count(*)                 as OBSEVATIONS
+     from
+       &sas_dataset
+     group
+       by &arg
+  ;quit;
+  options ls=130;
+  proc print data=__tmp width=min;
+  title "Dataset=%sysfunc(strip(&syslast)) frequencies and distinct count for &argx &__dtetym";
+  '));
+
+  %symdel argx sas_dataset arg / nowarn;
+
+%mend unq;
 
 %macro xlr /cmd ;
    store;note;notesubmit '%xlra;';
@@ -2701,7 +2676,7 @@ store;
                embedded_footnoteS         = "yes"
                );
 
-    proc report data=&argx missing style(column)=[textalign=left verticalalign=top];;
+    proc report data=&argx missing style(column)=[textalign=left verticalalign=top] split="_";
     run;quit;
 
     ods excel close;
@@ -2716,35 +2691,37 @@ store;
 %mend xlra;
 
 
-%macro avgby /cmd parmbuff                                                         
-   des="highlight dataset and type sex age to get proc means by sex for age";      
-   %symdel argd arg1 arg2 / nowarn;                                                
-   %let arg1=%scan(&syspbuff,1,%str( ));                                           
-   %let arg2=%scan(&syspbuff,2,%str( ));                                           
-   store;note;notesubmit '%avgbya;';                                               
-   run;                                                                            
-%mend avgby;                                                                       
-                                                                                   
-%macro avgbya;                                                                     
-   filename clp clipbrd ;                                                          
-   data _null_;                                                                    
-     infile clp;                                                                   
-     input;                                                                        
-     put _infile_;                                                                 
-     call symputx('argd',_infile_);                                                
-     call symputx("__dtetym",put(datetime(),datetime23.));                         
-   run;                                                                            
-   dm "out;clear;";                                                                
-   options nocenter;                                                               
-   footnote;                                                                       
-   title1 "-- MEANS of &arg2 by &arg1 for dataset &argd &__dtetym --";             
-   proc means data=&argd  n nmiss sum mean std min q1 median q3 max;               
-   class &arg1;                                                                    
-   var &arg2.;                                                                     
-   run;                                                                            
-   title;                                                                          
-   dm "out;top;";                                                                  
-%mend avgbya;                                                                      
-                                                                                   
+%macro sorth / cmd;
+   store;note;notesubmit '%sortha;'
+   run;
+%mend sorth;
 
-                                                                                                  
+%macro sortha;
+
+   filename clp clipbrd ;
+   data _tmp;
+     infile clp;
+     input;
+     lyn=_infile_;
+     putlog lyn;
+   run;quit;
+
+   proc sort data=_tmp force;
+      by lyn;
+   run;quit;
+
+   /* use this if you want to write to the profile catalog */
+   /* filename _tmp catalog "sasuser.profile._tmp.source"; */
+
+   filename _clp clipbrd ;
+   data _chk;
+     set _tmp;
+     file _clp;
+     put lyn;
+     file print;
+     put lyn;
+   run;quit;
+
+%mend sortha;
+
+
