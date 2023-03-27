@@ -9,7 +9,7 @@ OPTIONS
    /*  MCOMPILENOTE */
      MPRINTNEST
      lrecl=384
-     MAUTOLOCDISPLAY
+     NOMAUTOLOCDISPLAY
      NOFMTERR     /* turn  Format Error off                           */
      NOMACROGEN   /* turn  MACROGENERATON off                         */
      NOSYMBOLGEN  /* turn  SYMBOLGENERATION off                       */
