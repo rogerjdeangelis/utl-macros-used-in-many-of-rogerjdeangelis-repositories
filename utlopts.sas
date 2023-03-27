@@ -6,6 +6,7 @@ OPTIONS
    OBS=MAX
    FIRSTOBS=1
    lrecl=384
+   mautolocdisplay
    NOFMTERR      /* DO NOT FAIL ON MISSING FORMATS                              */
    SOURCE      /* turn sas source statements on                               */
    SOURCe2     /* turn sas source statements on                               */
