@@ -1,6 +1,6 @@
 %macro utl_submit_wps64x(pgmx,return=)/des="submiit a single quoted sas program to wps";
   * whatever you put in the Python or R clipboard will be returned in the macro variable
-    returnVarName;
+    return;
   * if you delay resolution, use resove=Y to resolve macros and macro variables passed to python;
   * write the program to a temporary file;
   %utlfkil(%sysfunc(pathname(work))/wps_pgmtmp.wps);
