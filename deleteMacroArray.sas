@@ -1,11 +1,26 @@
-%macro deleteMacArray(arr,start_index);                                                                                                 
-  %local J;                                                                                                                             
-  %if %symexist(&&arr.n) %then %do;                                                                                                     
-     %do J = &start_index %to &&&arr.n;                                                                                                 
-         %put *&arr.&J.*;                                                                                                               
-         %symdel &arr.&J. / NOWARN;                                                                                                     
-     %end;                                                                                                                              
-  %end;                                                                                                                                 
-  %symdel &arr.n / nowarn;                                                                                                              
- /* %deletemacarray(f_names,2) delete macros macrovar2-macrovar55  */                                                                   
-%mend deleteMacArray;          
+%macro deleteSasmacN()                                                       
+   /des="Delete all numberes sasmacr# libraries. does not delete sasnacr";   
+                                                                             
+   proc sql;                                                                 
+     select                                                                  
+        memname                                                              
+     into                                                                    
+        :_catNam separated by " "                                            
+     from                                                                    
+        sashelp.vscatlg                                                      
+     where                                                                   
+            libname =   "WORK"                                               
+        and memname eqt "SASMAC"                                             
+        and memname ne  "SASMACR"                                            
+   ;quit;                                                                    
+                                                                             
+   %put &=sqlobs;                                                            
+                                                                             
+   %if &sqlobs %then %do;                                                    
+      proc datasets lib=work mt=cat ;                                        
+         delete &_catNam;                                                    
+      run;quit;                                                              
+   %end;                                                                     
+                                                                             
+%mend deleteSasmacN;                                                         
+                                                                             
