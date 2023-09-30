@@ -1,0 +1,14 @@
+%macro sqlPartition(data,by=)/des="emulate sql partition over() funtionality";
+  (select
+     row_number
+    ,row_number - min(row_number) +1 as partition
+    ,*
+  from
+      (select *, monotonic() as row_number from
+         /*----                                                          ----*/
+         /*----  note max has no effect                                  ----*/
+         /*----                                                          ----*/
+         (select *, max(%scan(%str(&by),1,%str(,))) as sex from &data group by &by ))
+  group
+      by &by )
+%mend sqlPartition;
