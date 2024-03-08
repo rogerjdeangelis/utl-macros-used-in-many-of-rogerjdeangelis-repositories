@@ -21,7 +21,7 @@
     else do;
         pgm=&pgmx;
      end;
-     if index(pgm,"`") then cmd=tranwrd(pgm,"`","27"x);
+     if index(pgm,"`") then pgm=tranwrd(pgm,"`","27"x);
     put pgm;
     putlog pgm;
   run;
