@@ -35,4 +35,5 @@ data _null_;
   input;
   putlog _infile_;
 run;quit;
+filename ft15f001 clear;
 %mend utl_rend;
