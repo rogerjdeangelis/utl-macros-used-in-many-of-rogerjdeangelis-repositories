@@ -2,6 +2,7 @@
    dfstr<-deparse(substitute(dataf));
    file.remove(paste0("c:\\temp\\",dfstr,".sas7bdat"));
    file.remove("c:\\temp\\cmds.stcmd");
+   file.remove("c:\\temp\\rdsdat.rds");
    saveRDS(dataf, file="c:/temp/rdsdat.rds");
    fileConn<-file("c:/temp/comands.txt");
    writeLines(c(
