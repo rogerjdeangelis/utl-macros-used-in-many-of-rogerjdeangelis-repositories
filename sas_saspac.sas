@@ -2,6 +2,20 @@
 
 %*inc "c:/oto/sas_saspac.sas" ;
 
+/* to geta table of contents run this
+
+options ls=200;                                     
+data _null_;                                        
+infile "c:\oto\sas_saspac.sas" lrecl=200 recfm=v;   
+input;                                              
+if index(lowcase(_infile_),'%macro')>0 and index(compress(_infile_),'des=') ne 0 then do;
+ macro=substr(scan(left(_infile_ ),1,'('),2);       
+ putlog _n_ @7 macro $171.;                         
+end;                                                
+run;quit;                                           
+*/
+
+
 /*
  _                     _                                              _
 (_)_ __  ___  ___ _ __| |_    ___ ___  _ __ ___  _ __ ___   ___ _ __ | |_
@@ -14,7 +28,8 @@ cursor position, put A in prefix area and hit PF 4
 
   To insert a comment at cursor position
 
-  1. create empty comment block
+  1. create empty comment block, I suggest you channge first two stars
+     tp slash stars
 
    * *************************************
    * *
@@ -28,6 +43,295 @@ cursor position, put A in prefix area and hit PF 4
   4. Finally, type A in the prefix area where you want the comment
   5. Hit F4
 */
+/*                                   _ _                                                        
+  __ _ _   _  ___ _ __ _   _    __ _(_) |_                                                      
+ / _` | | | |/ _ \ `__| | | |  / _` | | __|                                                     
+| (_| | |_| |  __/ |  | |_| | | (_| | | |_                                                      
+ \__, |\__,_|\___|_|   \__, |  \__, |_|\__|                                                     
+    |_|                |___/   |___/                                                               
+
+see
+github
+https://tinyurl.com/3wxf8seh
+https://github.com/rogerjdeangelis/utl-querying-github-repositories-and-working-around-github-limits
+*/
+
+                                                                                           
+                                                                                                
+                                                                                                
+%macro git(var)/cmd parmbuff des="ignore case Query the github links for keywords see";                                                                        
+                                                                              
+                                                                                                
+   %symdel argx / nowarn;                                                                       
+                                                                                                
+   %let argx=%qtrim(&syspbuff);                                                                 
+                                                                                                
+                                                                                                
+   %let rc=%sysfunc(dosubl('                                                                    
+     options ls=255;                                                                            
+     /*---- %let argx=python;                                                 ----*/            
+                                                                                                
+     title "Select &argx from d:/git/git_010_repos.sasbdat";                                    
+                                                                                                
+     proc sql;                                                                                  
+        select                                                                                  
+           repo length=255                                                                      
+        from                                                                                    
+          "d:/git/git_010_repos.sas7bdat"                                                       
+        where                                                                                   
+          upcase(repo) contains "%qupcase(&argx)"                                               
+                                                                                                
+     ;quit;                                                                                     
+                                                                                                
+     title;                                                                                     
+     run;quit;                                                                                  
+     '));                                                                                       
+                                                                                                
+    %symdel argx  / nowarn;                                                                     
+                                                                                                
+%mend git;    
+
+%macro gitc(var)/cmd parmbuff des="respect case Query the github links for keywords see";               
+                                                                                           
+                                                                                           
+   %symdel argx / nowarn;                                                                  
+                                                                                           
+   %let argx=%qtrim(&syspbuff);                                                            
+                                                                                           
+                                                                                           
+   %let rc=%sysfunc(dosubl('                                                               
+     options ls=255;                                                                       
+     /*---- %let argx=python;                                                 ----*/       
+                                                                                           
+     title "Select &argx from d:/git/git_010_repos.sasbdat";                               
+                                                                                           
+     proc sql;                                                                             
+        select                                                                             
+           repo length=255                                                                 
+        from                                                                               
+          "d:/git/git_010_repos.sas7bdat"                                                  
+        where                                                                              
+          repo contains "&argx"                                                            
+                                                                                           
+     ;quit;                                                                                
+                                                                                           
+     title;                                                                                
+     run;quit;                                                                             
+     '));                                                                                  
+                                                                                           
+    %symdel argx  / nowarn;                                                                
+                                                                                           
+%mend gitc;   
+
+ 
+/*     _      
+  __ _(_)_ __ 
+ / _` | | `__|
+| (_| | | |   
+ \__,_|_|_|   
+              
+*/
+                                                                           
+                                                                                  
+%macro air/cmd des="Read ai results from clipboard and format result for ms word d:/rtf/search#.rft";                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                
+%let _idx=&sysindex;                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                
+%dosubl(%nrstr(                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                
+ filename clp clipbrd;                                                                                                                                                                                                                                          
+                                                                                                                                                                                                                                                                
+ data preprocess;                                                                                                                                                                                                                                               
+  length fyl $255 request $32756 idx name $16;                                                                                                                                                                                                                  
+  retain request ;                                                                                                                                                                                                                                              
+  idx=symget("_idx");                                                                                                                                                                                                                                           
+  infile clp end=eof filename=fyl;                                                                                                                                                                                                                              
+  name=cats("Search-",idx);                                                                                                                                                                                                                                     
+  input;                                                                                                                                                                                                                                                        
+  request=catx(" ",request,_infile_,"~{newline}");                                                                                                                                                                                                              
+  keep name request;                                                                                                                                                                                                                                            
+  if eof then do;                                                                                                                                                                                                                                               
+     output;                                                                                                                                                                                                                                                    
+     call symputx("name",name);                                                                                                                                                                                                                                 
+  end;                                                                                                                                                                                                                                                          
+run;quit;                                                                                                                                                                                                                                                       
+                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                
+%utlfkil(d:/rtf/&name..rtf);                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                
+ods escapechar="~";                                                                                                                                                                                                                                             
+title;                                                                                                                                                                                                                                                          
+footnote;                                                                                                                                                                                                                                                       
+ods listing close;                                                                                                                                                                                                                                              
+options orientation=landscape;                                                                                                                                                                                                                                  
+ods rtf file="d:/rtf/&name..rtf";                                                                                                                                                                                                                               
+proc report data=preprocess style=journal noheader;                                                                                                                                                                                                             
+cols                                                                                                                                                                                                                                                            
+    name                                                                                                                                                                                                                                                        
+    request                                                                                                                                                                                                                                                     
+    ;                                                                                                                                                                                                                                                           
+define Name   / group "Name"  noprint width=80 flow style(column)={just=left font_size=15pt font_weight=bold};                                                                                                                                                  
+define Request  / order "Request"  width=132 flow style(column)={vjust=top font_size=12pt};                                                                                                                                                                     
+break after name / page style={just=left};                                                                                                                                                                                                                      
+compute before name / style={just=left font_weight=bold font_size=15pt };                                                                                                                                                                                       
+ line name $200.;                                                                                                                                                                                                                                               
+ skp="09"x;                                                                                                                                                                                                                                                     
+ line skp $2.;                                                                                                                                                                                                                                                  
+endcomp;                                                                                                                                                                                                                                                        
+run;quit;                                                                                                                                                                                                                                                       
+                                                                                                                                                                                                                                                                
+ods rtf close;                                                                                                                                                                                                                                                  
+ods listing;                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                
+));                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                
+%mend air;    
+
+/*     _      
+  __ _(_)_  __
+ / _` | \ \/ /
+| (_| | |>  < 
+ \__,_|_/_/\_\
+              
+*/
+
+%macro aix/cmd des="Read ai results from clipboard and format result for ms word d:/xls/search#.xlsx";
+   %let _idx=&sysindex;
+   %dosubl(%nrstr(
+       %utlfkil(d:/xls/&name..xls);
+       ods listing close;
+       ods escapechar='~';
+       ods excel file="d:/xls/&name..xlsx" style=journal3a;
+       ods excel options(
+             absolute_column_width = "7in"
+             frozen_headers     = '1'
+             row_heights        = "0.75in"
+             embedded_titles    = "yes"
+             embedded_footnotes = "yes");
+       ods excel options(sheet_name="&name" );
+       proc report data=preprocess style=journal noheader;
+       cols
+           name
+           request
+           ;
+       define Name   / group "Name"  noprint width=80 flow style(column)={just=left font_size=10pt font_weight=bold};
+       define Request  / order "Request"  width=120 flow style(column)={vjust=top font_size=10pt};
+       break after name / page style={just=left};
+       compute before name / style={just=left font_weight=bold fontsize=10pt};
+        line name $200.;
+        skp=' ';
+        line skp $2.;
+       endcomp;
+       run;quit;
+       ods excel close;
+       ods listing;
+      ods listing;
+   ));
+%mend aix;
+
+/*     _ _   
+  __ _(_) |_ 
+ / _` | | __|
+| (_| | | |_ 
+ \__,_|_|\__|
+             
+*/
+
+%macro ait/cmd des="Read ai results from clipboard and format result for ms word d:/txt/search#.txt";
+   %let _idx=&sysindex;
+   %dosubl(%nrstr(
+      filename clp clipbrd;
+      data preprocess;
+        length fyl $255 request $32756 idx name $16;
+        retain request ;
+        idx=symget("_idx");
+        infile clp end=eof filename=fyl;
+        name=cats("Search-",idx);
+        input;
+        request=catx(" ",request,_infile_,"0D0A"x);
+        keep name request;
+        if eof then do;
+           output;
+           call symputx("name",name);
+        end;
+      run;quit;
+      %utlfkil(d:/txt/&name..txt);
+      ods escapechar="~";
+      title;
+      footnote;
+      ods listing file="d:/txt/&name..txt";
+      options orientation=landscape ls=132 ps=255;
+      proc report data=preprocess split=" " noheader;
+      cols
+          name
+          request
+          ;
+      define Name   / group "Name"  noprint width=13;
+      define Request  /order "Request"  flow width=100;
+      break after name / page ;
+      compute before name ;
+       line name $200.;
+       skp="09"x;
+       line skp $2.;
+      endcomp;
+      run;quit;
+      ods listing;
+   ));
+%mend ait;
+
+/*     _       
+  __ _(_)_ __  
+ / _` | | `_ \ 
+| (_| | | |_) |
+ \__,_|_| .__/ 
+        |_|    
+*/
+
+%macro aip/cmd des="Read ai results from clipboard and format result for ms word d:/txt/search#.txt";
+   %let _idx=&sysindex;
+   %dosubl(%nrstr(
+      filename clp clipbrd;
+      data preprocess;
+        length fyl $255 request $32756 idx name $16;
+        retain request ;
+        idx=symget("_idx");
+        infile clp end=eof filename=fyl;
+        name=cats("Search-",idx);
+        input;
+        request=catx(" ",request,_infile_,"~{newline}");
+        keep name request;
+        if eof then do;
+           output;
+           call symputx("name",name);
+        end;
+      run;quit;
+      %utlfkil(d:/pdf/&name..pdf);
+      ods escapechar="~";
+      title;
+      footnote;
+      ods listing close;
+      options orientation=landscape;
+      ods pdf file="d:/pdf/&name..pdf";
+      proc report data=preprocess style=journal noheader;
+      cols
+          name
+          request
+          ;
+      define Name   / group "Name"  noprint width=80 flow style(column)={just=left font_size=15pt font_weight=bold};
+      define Request  / order "Request"  width=132 flow style(column)={vjust=top font_size=12pt};
+      break after name / page style={just=left};
+      compute before name / style={just=left font_weight=bold font_size=15pt };
+       line name $200.;
+       skp="09"x;
+       line skp $2.;
+      endcomp;
+      run;quit;
+      ods pdf close;
+      ods listing;
+   ));
+%mend aip;
+
+
 
 /*
   ___ _ __ ___
@@ -50,7 +354,7 @@ __  ___ __   __ _  __| |
      |_|
 */
 
-%macro xpad / cmd des="Usage: xpad on command line. Remove line padding and copy program to clipbrd";
+%macro xpad / cmd des="Usage: xpad on command line. Remove DMS line padding and copy program to clipbrd";
    /*---- save current program ----*/
    file "catalog 'sasuser.profile.sasinp.source" r;home;note;notesubmit '%xpada;';
    run;
@@ -425,6 +729,35 @@ __  _| |_ __
 %macro iota (utliota1) /cmd des="Usage: iota. Type iota 10 and 10 rows with 01 02 03 - 10 will be added to the editor";
    sub '%iotb';
 %mend iota;
+
+%macro iotb
+/ des="Called by utliota n integers in editor";
+
+%local ui;
+%let urc=%sysfunc(filename(utliotb1,"work.utliotb1.utliotb1.catams"));
+
+%put urc=&urc;
+
+%let ufid = %sysfunc(fopen(&utliotb1,o));
+
+%do ui = 1 %to &utliota1;
+
+%let uzdec = %sysfunc(putn(&ui,z%length(&utliota1)..));
+
+%let urc=%sysfunc(fput(&ufid,&uzdec));
+
+%let urc=%sysfunc(fwrite(&ufid));
+
+%end;
+
+%let urc=%sysfunc(fclose(&ufid));
+
+%let urc=%sysfunc(filename(utliotb1));
+
+dm "inc 'work.utliotb1.utliotb1.catams'";
+
+%mend iotb;
+
 /*          _   _
   ___ _   _| |_| |__
  / __| | | | __| `_ \
@@ -812,11 +1145,12 @@ title;
   data _null_; call symputx("__dtetym",put(datetime(),datetime23.)); run;
   proc sql noprint;select put(count(*),comma18.) into :tob  separated by ' ' from _last_;quit;
   proc printto print="%sysfunc(pathname(work))/__dm.txt";
-  title1 "Up to 40 obs from last table %upcase(%sysfunc(getoption(_last_))) total obs=&tob &__dtetym";
   proc print data=_last_ ( Obs= 40 ) width=min uniform  heading=horizontal;format _all_;run;
   proc printto;
   filename __dm clipbrd ;
   title;
+  title1 "Up to 40 obs from last table %upcase(%sysfunc(getoption(_last_))) total obs=&tob &__dtetym";
+  title2 " ";
   data _null_;
      infile "%sysfunc(pathname(work))/__dm.txt";
      input; file __dm ; put _infile_; file print; put _infile_;
@@ -857,7 +1191,8 @@ title;
   format _all_;run;
   proc printto;
   filename __dm clipbrd ;
-  title "Up to 40 obs from %upcase(&argx) total obs=&tob &__dtetym";
+  title12 ".";
+  title1 "Up to 40 obs from %upcase(&argx) total obs=&tob &__dtetym";
   data _null_;
      infile "%sysfunc(pathname(work))/__dm.txt" end=dne;
      input;
@@ -1376,7 +1711,7 @@ var         obs   uniques
          len=vlength(num[i]);
          lbl=vlabel(num[i]);
          numc=put(num[i],best. -l);
-         putlog @1 nam @34 typ @41 len @40 numc   @67 lbl $40.;
+         putlog @1 nam @34 typ @35 len @40 num[i] best. @67 lbl $40.;
       end;
       stop;
    run;quit;
@@ -1456,39 +1791,40 @@ var         obs   uniques
    dm "out;top;";
 %mend frqha;
 
-%macro prtwh /cmd parmbuff;
-/*-----------------------------------------*\
-|  highlight dataset in editor              |   data class; set sashelp.class; x =name; run;quit;
-|  prt "sex='F'"                            |
-\*-----------------------------------------*/
-   %let argx=&syspbuff;
-   store;note;notesubmit '%prtwha;';
-   run;
-%mend prtwh;
+%macro prtwh /cmd parmbuff des='usage: hilite and type prtwh "sex=s ingle quote F single quote " subset listing';                                    
+/*-----------------------------------------*\                                                                                                        
+|  highlight dataset in editor              |                                                                                                        
+|  prtwh "sex='F'"                          |                                                                                                        
+\*-----------------------------------------*/                                                                                                        
+   %let argx=&syspbuff;                                                                                                                              
+   store;note;notesubmit '%prtwha;';                                                                                                                 
+   run;                                                                                                                                              
+%mend prtwh;                                                                                                                                         
+                                                                                                                                                     
+%macro prtwha;                                                                                                                                       
+   filename clp clipbrd ;                                                                                                                            
+   data _null_;                                                                                                                                      
+     infile clp;                                                                                                                                     
+     input;                                                                                                                                          
+     put _infile_;                                                                                                                                   
+     call symputx('argd',_infile_);                                                                                                                  
+   run;                                                                                                                                              
+   dm "out;clear;";                                                                                                                                  
+   proc datasets lib=work nodetails nolist;                                                                                                          
+   delete frqh;                                                                                                                                      
+   run;quit;                                                                                                                                         
+   options nocenter;                                                                                                                                 
+   data frqh;                                                                                                                                        
+      set &argd(where=(%sysfunc(dequote(&argx))));                                                                                                   
+   run;quit;                                                                                                                                         
+   title1 "print of datasets ";                                                                                                                      
+   title2 &argx;                                                                                                                                     
+   proc print data=frqh(obs=10000)  width=min;                                                                                                       
+   run;                                                                                                                                              
+   title;                                                                                                                                            
+   dm "out;top;";                                                                                                                                    
+%mend prtwha;             
 
-%macro prtwha;
-   filename clp clipbrd ;
-   data _null_;
-     infile clp;
-     input;
-     put _infile_;
-     call symputx('argd',_infile_);
-   run;
-   dm "out;clear;";
-   proc datasets lib=work nodetails nolist;
-   delete frqh;
-   run;quit;
-   options nocenter;
-   data frqh;
-      set &argd(where=(%sysfunc(dequote(&argx))));
-   run;quit;
-   title1 "print of datasets ";
-   title2 &argx;
-   proc print data=frqh(obs=10000)  width=min;
-   run;
-   title;
-   dm "out;top;";
-%mend prtwha;
 
 
 
