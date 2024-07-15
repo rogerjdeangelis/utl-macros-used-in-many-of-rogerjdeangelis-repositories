@@ -26,7 +26,7 @@ run;quit;
 %if "&return" ne ""  %then %do;
   filename clp clipbrd ;
   data _null_;
-   infile clp;
+   infile clp obs=1;
    input;
    putlog "xxxxxx  " _infile_;
    call symputx("&return.",_infile_,"G");
