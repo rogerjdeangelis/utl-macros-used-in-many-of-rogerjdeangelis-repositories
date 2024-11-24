@@ -1,4 +1,4 @@
-%macro utl_getTable(sashelp,class)
+%macro utl_getTable(lib,dsn)
     /des="get table attributes meta data";
 /*--- OUTPUT MACRO VARIABLES
   _LIBNAME
