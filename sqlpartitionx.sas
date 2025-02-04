@@ -12,7 +12,7 @@
      group
        by team )
    group
-       by team, seq
+       by &by, seq
    having
        1=1)
 %mend sqlpartitionx;
