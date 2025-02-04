@@ -5,13 +5,8 @@
      ,max(seq) as seq                                       
    from                                                     
      (select                                                
-        *                                                   
-        %if &minus=1 %then %do;                             
-           %str(,seq-min(seq) + 1 as partition)             
-        %end;                                               
-        %else %do;                                          
-           %str(, seq - min(seq) + 1 as partition)          
-        %end;                                               
+       *                                                    
+      ,seq-min(seq) + 1 as partition                        
      from                                                   
        (select *, &minus*monotonic() as seq from sd1.have)  
      group                                                  
