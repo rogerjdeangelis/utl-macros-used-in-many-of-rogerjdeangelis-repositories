@@ -1,15 +1,15 @@
-%macro utl_rendx(return=)/des="utl_rbeginx uses parmcards and must end with utl_rendx macro";
+%macro utl_rendx(return=,resolve=Y)/des="utl_rbeginx uses parmcards and must end with utl_rendx macro";
 run;quit;
 * EXECUTE R PROGRAM;
 data _null_;
   infile "c:/temp/r_pgm";
   input;
   file "c:/temp/r_pgmx";
-  lyn=resolve(_infile_);
-  put lyn;
+  %if "&resolve"="Y" %then %do;_infile_=resolve(_infile_);%end;
+  put _infile_;
 run;quit;
 options noxwait noxsync;
-filename rut pipe "D:\r412\R\R-4.1.2\bin\r.exe --vanilla --quiet --no-save < c:/temp/r_pgmx";
+filename rut pipe "D:\r414\bin\r.exe --vanilla --quiet --no-save < c:/temp/r_pgmx";
 run;quit;
 data _null_;
   file print;
@@ -34,3 +34,6 @@ run;quit;
   %end;
 filename ft15f001 clear;
 %mend utl_rendx;
+                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                
+                            
