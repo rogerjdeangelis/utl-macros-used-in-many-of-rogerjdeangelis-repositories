@@ -48,7 +48,7 @@
          delete &outdsn;
         run;quit;
 
-        filename &_tmp2_ "%sysfunc(pathname(work))/&_tmp2_.txt";
+        filename &_tmp2_ "%sysfunc(pathname(work))/&_tmp2_..txt";
 
         data _null_;
           infile &_tmp1_ length=l;
