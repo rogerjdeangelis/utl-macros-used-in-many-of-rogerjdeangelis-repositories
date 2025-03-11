@@ -2,6 +2,7 @@
          / des = "Turn all debugging options off forgiving options";
 
 OPTIONS
+   OPTIONS missing='.'
    MSGLEVEL=I
    OBS=MAX
    FIRSTOBS=1
