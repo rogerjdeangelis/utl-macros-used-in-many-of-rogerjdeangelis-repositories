@@ -8,7 +8,7 @@
        *                                                    
       ,seq-min(seq) + 1 as partition                        
      from                                                   
-       (select *, &minus*monotonic() as seq from sd1.have)  
+       (select *, &minus*monotonic() as seq from &dsn)  
      group                                                  
        by &by )                                             
    group                                                    
