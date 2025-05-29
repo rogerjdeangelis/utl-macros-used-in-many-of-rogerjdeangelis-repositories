@@ -20,6 +20,7 @@
 /*   if _n_=3 then sex='U';                                                                                               */
 /*  run;quit;                                                                                                             */
 /*                                                                                                                        */
+/*                                                                                                                        */
 /*  *---- WITH QUOTES ----*;                                                                                              */
 /*  %utl_concat(class,var=sex,unique=N,qstyle=DOUBLE,od=%str(,),prx="/^F/");   ;  "F","F"   * comma delimites             */
 /*  %utl_concat(class,var=sex,unique=N,qstyle=DOUBLE,od=%str( ),prx="/^F/");   ;  "F" "F"   * space delimited             */
@@ -55,21 +56,52 @@
 /*  %put %utl_concat(class,var=sex,unique=Y,od=%str( ),prx="/^F/");            ;   F                                      */
 /*  %put %utl_concat(class,var=sex,unique=Y,od=%str(,));                       ;   F,M,U                                  */
 /*  %put %utl_concat(class,var=sex,unique=Y,od=%str( ));                       ;   F M U                                  */
+/*                                                                                                                        */
+/*  CHANGE LOG                                                                                                            */
+/*                                                                                                                        */
+/*  1. Added code to handle numeric second argument to prxmatck   2025-05-28 RJD                                          */
+/*     prxmatch('\.\',var) failed when var was numeric                                                                    */
+/*                                                                                                                        */
 /**************************************************************************************************************************/
-%macro utl_concat(data,var=name,unique=N,qstyle=,od=%str( ),prx=%str("/./"));
+
+%macro utl_concat(data,var=name,unique=N,qstyle=,od=%str( ),prx=%str('/./'));
+
   %symdel _vals / nowarn;
   %global _vals ;
+  %local  varx typ dsid posv rc;
+
+  /*----
+    %let data=dupgroups;
+    %let var=age;
+  ----*/
+
+   %let dsid = %sysfunc(open(&data,i));
+   %let posv = %sysfunc(varnum(&dsid,&var));
+   %let typ=   %sysfunc(vartype(&dsid,&posv));
+   %let rc =   %sysfunc(close(&dsid));
+
+   %put &=typ;
+
+   %if &typ=N %then %do;
+      %let varx='N';
+   %end;
+   %else %do;
+      %let varx=&var;
+   %end;
+
+   %put &=varx;
+
   %if &unique=N & &qstyle=DOUBLE %then %do;
      %dosubl(%nrstr(
        proc sql noprint;
-        select quote(strip(&var)) into: _vals separated by "&od" from &data where prxmatch(&prx,&var)
+        select quote(strip(&var)) into: _vals separated by "&od" from &data where prxmatch(&prx,&varx)
        ;quit;
      ))
   %end;
   %else %if &unique=N & &qstyle=SAS %then %do;
      %dosubl(%nrstr(
       proc sql noprint;
-        select quote(strip(&var)) into: _vals separated by " " from &data  where prxmatch(&prx,&var)
+        select quote(strip(&var)) into: _vals separated by " " from &data  where prxmatch(&prx,&varx)
        ;quit;
        ))
       %let _vals =%sysfunc(tranwrd(%str(&_vals),%str(%"),%str(%')));
@@ -78,14 +110,14 @@
   %else %if &unique=Y & &qstyle=DOUBLE %then %do;
      %dosubl(%nrstr(
        proc sql noprint;
-        select distinct(quote(strip(&var))) into: _vals separated by "&od" from &data  where prxmatch(&prx,&var)
+        select distinct(quote(strip(&var))) into: _vals separated by "&od" from &data  where prxmatch(&prx,&varx)
        ;quit;
      ))
   %end;
   %else %if &unique=Y & &qstyle=SAS %then %do;
      %dosubl(%nrstr(
        proc sql noprint;
-        select distinct(quote(strip(&var))) into: _vals separated by " " from &data  where prxmatch(&prx,&var)
+        select distinct(quote(strip(&var))) into: _vals separated by " " from &data  where prxmatch(&prx,&varx)
        ;quit;
      ))
       %let _vals =%sysfunc(tranwrd(%str(&_vals),%str(%"),%str(%')));
@@ -94,14 +126,14 @@
   %else %if &unique = N %then %do;
      %dosubl(%nrstr(
        proc sql noprint;
-        select &var into: _vals separated by "&od" from &data  where prxmatch(&prx,&var)
+        select &var into: _vals separated by "&od" from &data  where prxmatch(&prx,&varx)
        ;quit;
      ))
   %end;
   %else %if %substr(%upcase(&unique),1,1) =Y %then %do;
      %dosubl(%nrstr(
        proc sql noprint;
-        select distinct(&var) into: _vals separated by "&od" from &data  where prxmatch(&prx,&var)
+        select distinct(&var) into: _vals separated by "&od" from &data  where prxmatch(&prx,&varx)
        ;quit;
      ))
   %end;
