@@ -15,9 +15,7 @@ function sql_create_table(db,inp,quoted_table);
   end
   sql_str = sprintf('( %s )', strjoin(sqlcols, ','));
   sql_make = ["create table ", quoted_table, sql_str];
-  _temp_ = ["create table _temp_" sql_str];
-  disp(sql_make)
-  disp(_temp_)
-  execute(db,sql_make);
-  execute(db,_temp_);
+  
+  disp(sql_make)  
+  execute(db,sql_make);   
 end
