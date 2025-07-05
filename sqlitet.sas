@@ -3,14 +3,15 @@
   ,inp      = students
   ,out      = want
 ) / des="import sqlite table to sas dataset";
-%utlfkil(%sysfunc(pathname(work))/want.csv);
+%utlfkil(%sysfunc(pathname(work))/data.csv);
+%utlfkil(%sysfunc(pathname(work))/meta.csv);
 /*---- powershell ----*/
 %utl_submit_ps64("
-sqlite3 -csv -header '&dbpath'
-  'select * from &inp;'
-   > '%sysfunc(pathname(work))/want.csv';
-sqlite3 -header -csv 'd:/sqlite/have.db'
-  'PRAGMA table_info (&inp);'
+sqlite3 -csv '&dbpath'
+  'select * from &inp'
+   > '%sysfunc(pathname(work))/data.csv';
+sqlite3 -header -csv '&dbpath'
+  'PRAGMA table_info (&inp)'
    > '%sysfunc(pathname(work))/meta.csv';
 ");
 proc import out=_meta_
@@ -36,7 +37,7 @@ run;quit;
 data &out;
   informat
     %do_over(_nam _typ,phrase=?_nam ?_typ);;
-  infile "d:/csv/data.csv" delimiter=',';
+  infile "%sysfunc(pathname(work))/data.csv" delimiter=',' missover;
   input
     %do_over(_nam,phrase=?);;
 run;quit;
@@ -44,3 +45,4 @@ run;quit;
 %arraydelete(_nam)
 /*---- optimize variable lengths ----*/
 %utl_optlenpos(&out,&out);
+%mend sqlitet;

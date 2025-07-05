@@ -9,13 +9,12 @@ proc datasets lib=work
 run;quit;
 %utlfkil(%sysfunc(pathname(work))/want.csv);
 /*---- powershell ----*/
-%utl_submit_ps64("
-sqlite3 -csv -header '&dbpath'
-  'select * from &inp;'
-   > '%sysfunc(pathname(work))/want.csv';
-");
-proc import out=want
-    datafile="d:/csv/want.csv"
+%utl_submit_ps64x("sqlite3 -csv -header
+  '&dbpath' 'select * from &inp'
+   > '%sysfunc(pathname(work))/want.csv';");
+proc import
+    out=&out
+    datafile="%sysfunc(pathname(work))/want.csv"
     dbms=csv
     replace;
     getnames=YES;
