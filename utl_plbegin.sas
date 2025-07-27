@@ -1,5 +1,5 @@
-%macro utl_psbegin;
-%utlfkil(c:/temp/ps_pgm.ps);
-%utlfkil(c:/temp/ps_pgm.log);
-filename ft15f001 "c:/temp/ps_pgm.ps1";
+%macro utl_plbegin / des="drop down to perl";;
+%utlfkil(c:/temp/pl_pgm.txt);
+%utlfkil(c:/temp/pl_log.txt);
+filename ft15f001 "c:/temp/pl_pgm.txt";
 %mend utl_plbegin;
