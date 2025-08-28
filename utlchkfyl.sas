@@ -1,4 +1,4 @@
-%macro utlchkfyl(file) / delete file if it exists;
+%macro utlchkfyl(file) / des="delete file if it exists";
   %if %sysfunc(fileexist(&file)) ge 1 %then %do;
     %let rc=%sysfunc(filename(temp,&file));
     %let rc=%sysfunc(fdelete(&temp));
