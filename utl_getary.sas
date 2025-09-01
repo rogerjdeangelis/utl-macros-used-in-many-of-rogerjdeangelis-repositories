@@ -1,4 +1,4 @@
-%macro utl_getary(dsn);
+%macro utl_getary(dsn,type=);
 %symdel ary/nowarn;
 %dosubl('
 %symdel ary/nowarn;
@@ -18,7 +18,7 @@ data _null_;
   if eof then do;
     r = _n_;
     c = dim(vars);
-    prefix = cats("[",r,",",c,"] (");
+    prefix = cats("[",r,",",c,"] &type (");
     suffix = ");";
     array_str = catx(" ",prefix,allvals,suffix);
     put array_str=;
