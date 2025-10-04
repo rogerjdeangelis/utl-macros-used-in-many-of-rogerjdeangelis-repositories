@@ -14,8 +14,6 @@
   run;quit;                                                                     
                                                                                 
   %include "c:/wpsoto/wps_py2rdataframeout.sas";                                
-                                                                                
-proc print data=rwant(obs=5);                                                   
-run;quit;                                                                       
-                                                                                
+                                                                                                                                           
 %mend wps_py2sastable;                                                          
+
