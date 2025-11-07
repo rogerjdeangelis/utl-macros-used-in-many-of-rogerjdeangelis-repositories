@@ -297,10 +297,11 @@
 %* resolve TP (the translated phrase) and perform the looping;
 %do I=1 %to &&&prefix1.n;
 %if &I>1 and %length(%str(&between))>0 %then &BETWEEN;
-%unquote(&TP)
+%sysfunc(dequote(&TP))
 %end;  
 
 %end;
 %end;
 
 %MEND;
+
