@@ -6,8 +6,10 @@ run;quit; /*--- EXECUTE DATASTEP CREATES C:/TEMP/PY_PGM.PY ---*/
 data _null_;                                                                    
   infile "c:/temp/py_mac.sas" delimiter = ',' dsd;                              
   informat return resolve in out  py2r $255.;                                   
-  input return resolve in out  py2r;                                            
-  call symputx('return'  ,return  );                                            
+  input return resolve in out  py2r; 
+                                       
+  call symputx('return'  ,return  ); 
+                                          
   call symputx('resolve' ,resolve );                                            
   call symputx('in'      ,in      );                                            
   call symputx('out'     ,out     );                                            
@@ -47,7 +49,7 @@ data _null_;
   putlog _infile_;                                                                                                                                              
 run;quit;                                                                                                                                                       
 /*--- PYPERCLIP TEXT TO MACRO VARIABLE          ---*/                                                                                                           
-%if "&return" ne ""  %then %do;                                                                                                                                 
+%if %upcase(&return) ^= NA  %then %do;                                                                                                                                 
   filename clp clipbrd ;                                                                                                                                        
   data _null_;                                                                                                                                                  
    infile clp;                                                                                                                                                  
@@ -56,7 +58,7 @@ run;quit;
    call symputx("&return.",_infile_,"G");                                                                                                                       
   run;quit;                                                                                                                                                     
 %end;  
-%if &out ^= 0 %then %do;                                                                                                                                                         
+%if %upcase(&out) ^= NA  %then %do;                                                                                                                                                             
    /*--- PANDA DATAFRAME TO SLC SAS DATASET        ---*/                                                                                                           
   data _null_;                                                                                                                                                    
      file "c:/temp/py_procr.sas";                                                                                                                                  
