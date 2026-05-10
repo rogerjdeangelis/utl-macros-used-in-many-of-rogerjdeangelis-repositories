@@ -1,0 +1,8 @@
+{
+  "bundle": "t002_getfilewithoutextension",
+  "source_file": "getFileWithoutExtension.sas",
+  "source_blob_sha": "19d8919203a9588d05d52b2f84a5d92b60c041b1",
+  "source_commit": "e68c00adb91e69a7f62a4982e04b344e0587a230",
+  "tier": "real_data",
+  "notes": "Author's macro is a one-line %qscan(-2, './\\\\') wrapper. Bundle defines the macro and exercises it on Unix, DOS, and SAS-source paths. The /des=\"...\" description option from the original was omitted because Jenner does not yet recognize it."
+}

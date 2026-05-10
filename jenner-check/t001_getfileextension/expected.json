@@ -1,0 +1,22 @@
+{
+  "_captured_at": "2026-05-11T00:55:00Z",
+  "_captured_run_id": "r_019e131d423a72a1b81f97ca09c162e9",
+  "status": "ok",
+  "exit_code": 0,
+  "log_contains": [
+    "ext_csv=csv",
+    "ext_pdf=pdf",
+    "ext_sas=sas",
+    "ext_dual=gz",
+    "NOTE: DATA _null_"
+  ],
+  "log_does_not_contain": [
+    "ERROR:",
+    "[JENNER-ERROR",
+    "Macro error:"
+  ],
+  "diagnostics": {
+    "parse_warnings": [],
+    "runtime_warnings": []
+  }
+}
