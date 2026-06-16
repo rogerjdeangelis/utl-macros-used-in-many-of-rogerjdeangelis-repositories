@@ -1,30 +1,27 @@
-%macro slc_lxend(returnvar=N);                                                  
-/*---you need to write to the winsows clipboard fro ubuntu to return the contents to the slc ---*/                                                              
-options noxwait noxsync;                                                                                                                                        
-filename rut pipe  "wsl bash /home/xlr82sas/temp/lx_pgm.sh";                                                                                                    
-run;quit;                                                                                                                                                       
-  data _null_;                                                                                                                                                  
-    file print;                                                                                                                                                 
-    infile rut recfm=v lrecl=32756;                                                                                                                             
-    input;                                                                                                                                                      
-    put _infile_;                                                                                                                                               
-    putlog _infile_;                                                                                                                                            
-  run;                                                                                                                                                          
-  * use the clipboard to create macro variable;                                                                                                                 
-  %if %upcase(%substr(&returnVar.,1,1)) ne N %then %do;                                                                                                         
-    filename clp clipbrd ;                                                                                                                                      
-    data _null_;                                                                                                                                                
-     length txt $200;                                                                                                                                           
-     infile clp;                                                                                                                                                
-     input;                                                                                                                                                     
-     putlog "macro variable &returnVar = " _infile_;                                                                                                            
-     call symputx("&returnVar.",_infile_,"G");                                                                                                                  
-    run;quit;                                                                                                                                                   
-  %end;                                                                                                                                                         
-data _null_;                                                                                                                                                    
-  infile rut;                                                                                                                                                   
-  input;                                                                                                                                                        
-  file "c:/temp/lx_pgm.log";                                                                                                                                    
-  put _infile_; */                                                                                                                                              
-run;quit;                                                                                                                                                       
-%mend slc_lxend;                                                                                                                                                
+%macro slc_lxend;                                                               
+    ;                                                                           
+  run;                                                                          
+  /* Remove Windows line endings */                                             
+  data _null_;                                                                  
+    call system('wsl sed -i "s/\r$//" /home/xlr82sas/temp/lx_pgm.sh');          
+  run;                                                                          
+  /* Make executable */                                                         
+  data _null_;                                                                  
+    call system('wsl chmod +x /home/xlr82sas/temp/lx_pgm.sh');                  
+  run;                                                                          
+  options noxwait noxsync;                                                      
+  filename rut pipe "wsl bash -l -c /home/xlr82sas/temp/lx_pgm.sh";             
+  data _null_;                                                                  
+    file print;                                                                 
+    infile rut recfm=v lrecl=32756;                                             
+    input;                                                                      
+    put _infile_;                                                               
+    putlog _infile_;                                                            
+  run;                                                                          
+  data _null_;                                                                  
+    infile rut;                                                                 
+    input;                                                                      
+    file "c:\temp\lx_pgm.log";                                                  
+    put _infile_;                                                               
+  run;                                                                          
+%mend slc_lxend;                                                                
