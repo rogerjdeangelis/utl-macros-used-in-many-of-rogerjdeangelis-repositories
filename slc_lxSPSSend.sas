@@ -1,0 +1,31 @@
+%macro slc_lxSPSSend(returnvar=N);                                              
+/*---you need to write to the winsows clipboard fro ubuntu to return the contents to the slc ---*/                                                              
+options noxwait noxsync;                                                                                                                                        
+filename rut pipe  "wsl /usr/bin/pspp /home/xlr82sas/temp/pspp.ps -o /home/xlr82sas/temp/pspp.log ";                                                            
+run;quit;                                                                                                                                                       
+  data _null_;                                                                                                                                                  
+    file print;                                                                                                                                                 
+    infile rut recfm=v lrecl=32756;                                                                                                                             
+    input;                                                                                                                                                      
+    put _infile_;                                                                                                                                               
+    putlog _infile_;                                                                                                                                            
+  run;                                                                                                                                                          
+  /*--- SEND THE OUTPUT TO THE LIST ALSO IN THE LOG ---*/                                                                                                       
+  data _null_;                                                                                                                                                  
+   infile "\\wsl$\Ubuntu\home\xlr82sas\temp\pspp.log";                                                                                                          
+   input;                                                                                                                                                       
+   file print;                                                                                                                                                  
+   put _infile_;                                                                                                                                                
+  run;                                                                                                                                                          
+  * use the clipboard to create macro variable;                                                                                                                 
+  %if %upcase(%substr(&returnVar.,1,1)) ne N %then %do;                                                                                                         
+    filename clp clipbrd ;                                                                                                                                      
+    data _null_;                                                                                                                                                
+     length txt $200;                                                                                                                                           
+     infile clp;                                                                                                                                                
+     input;                                                                                                                                                     
+     putlog "macro variable &returnVar = " _infile_;                                                                                                            
+     call symputx("&returnVar.",_infile_,"G");                                                                                                                  
+    run;quit;                                                                                                                                                   
+  %end;                                                                                                                                                         
+%mend slc_lxSPSSend;                                                                                                                                            
