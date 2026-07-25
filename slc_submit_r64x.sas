@@ -3,11 +3,12 @@
      ,return=N                                                                  
      ,resolve=N                                                                 
      )/des="Semi colon separated set of R commands - drop down to R";           
+  /*--- ONLY USE DOUBLE QUOTES AND BACTICS INSIDE THIS MACRO                             ---*/                                                                  
   /*--- THIS DROP DOWN SUPPORTS THREE QUOTES, SINGLE QUOTE, DOUBLE QUOTE AND BACTIC      ---*/                                                                  
   /*--- YOU CAN RESOLVE DOUBLE QUOTED MACRO VARIABLES INSIDE SINGLE QUOTES USING BACTIC  ---*/                                                                  
   /*--- THE MACRO VARIABLE INSIDE THE R PROGRAM, AREA<-'&RADIUS', CAN BE RESOLVED        ---*/                                                                  
   /*--- THE NOTEPAD CLIPBOARD IS USE TO PASS MACRO CREATE DBY R BACK TO THE DATASTEP     ---*/                                                                  
-  %utlfkil(c:/temp/r_pgm.txt);                                                                                                                                  
+  %utlfkil(c:\temp\r_pgm.txt);                                                                                                                                  
   * clear clipboard;                                                                                                                                            
   filename _clp clipbrd;                                                                                                                                        
   data _null_;                                                                                                                                                  
@@ -15,9 +16,9 @@
     put " ";                                                                                                                                                    
   run;quit;                                                                                                                                                     
   * WRITE THE PROGRAM TO A TEMPORARY FILE AND LOG;                                                                                                              
-  filename r_pgm "c:/temp/r_pgm.txt" lrecl=32766 recfm=v;                                                                                                       
+  filename r_pgm "c:\temp\r_pgm.txt" lrecl=32766 recfm=v;                                                                                                       
   data _null_;                                                                                                                                                  
-    length pgm $32756 ;                                                                                                                                         
+    length pgm $32756 cmd $255;                                                                                                                                 
     file r_pgm;                                                                                                                                                 
     if substr(upcase("&resolve"),1,1)="Y" then do;                                                                                                              
         pgm=resolve(&pgmx);                                                                                                                                     
@@ -26,11 +27,15 @@
         pgm=&pgmx;                                                                                                                                              
     end;                                                                                                                                                        
     if index(pgm,"`") then pgm=resolve(tranwrd(pgm,"`","27"x));                                                                                                 
-    put pgm;                                                                                                                                                    
-    putlog pgm;                                                                                                                                                 
+    semi=countc(pgm,";");                                                                                                                                       
+    do idx=1 to semi;                                                                                                                                           
+      cmd=cats(scan(pgm,idx,";"));                                                                                                                              
+      len=length(cmd);                                                                                                                                          
+      put cmd $varying255. len;                                                                                                                                 
+    end;                                                                                                                                                        
   run;                                                                                                                                                          
   * PIPE FILE THROUGH R;                                                                                                                                        
-  filename rut pipe "C:\Progra~1\R\R-4.5.2\bin\r.exe --vanilla --quiet --no-save < c:/temp/r_pgm.txt";                                                          
+  filename rut pipe "C:\Progra~1\R\R-4.5.2\bin\r.exe --vanilla --quiet --no-save < c:\temp\r_pgm.txt";                                                          
   data _null_;                                                                                                                                                  
     file print;                                                                                                                                                 
     infile rut recfm=v lrecl=32756;                                                                                                                             
