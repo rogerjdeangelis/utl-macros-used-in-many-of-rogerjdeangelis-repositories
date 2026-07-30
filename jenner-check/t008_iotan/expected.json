@@ -1,0 +1,21 @@
+{
+  "_captured_at": "2026-05-11T00:56:00Z",
+  "_captured_run_id": "r_019e131db7bd7910ac97ba5c7a4233e4",
+  "status": "ok",
+  "exit_code": 0,
+  "log_contains": [
+    "iotan_default=1 2 3 4 5",
+    "iotan_evens=2 4 6 8 10",
+    "iotan_csv=1,2,3,4,5",
+    "NOTE: DATA _null_"
+  ],
+  "log_does_not_contain": [
+    "ERROR:",
+    "[JENNER-ERROR",
+    "Macro error:"
+  ],
+  "diagnostics": {
+    "parse_warnings": [],
+    "runtime_warnings": []
+  }
+}

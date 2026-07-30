@@ -1,0 +1,21 @@
+{
+  "_captured_at": "2026-05-11T00:55:30Z",
+  "_captured_run_id": "r_019e131d7c5771c0a67fb4b817fa743e",
+  "status": "ok",
+  "exit_code": 0,
+  "log_contains": [
+    "stem_unix=2024_inventory",
+    "stem_dos=summary",
+    "stem_sas=etl_step01",
+    "NOTE: DATA _null_"
+  ],
+  "log_does_not_contain": [
+    "ERROR:",
+    "[JENNER-ERROR",
+    "Macro error:"
+  ],
+  "diagnostics": {
+    "parse_warnings": [],
+    "runtime_warnings": []
+  }
+}

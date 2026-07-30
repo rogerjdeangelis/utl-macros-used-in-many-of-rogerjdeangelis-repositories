@@ -1,0 +1,8 @@
+{
+  "bundle": "t008_iotan",
+  "source_file": "iotan.sas",
+  "source_blob_sha": "b392ccdec2cfd1fd177ca0fc3e0b71c772e5dd98",
+  "source_commit": "e68c00adb91e69a7f62a4982e04b344e0587a230",
+  "tier": "real_data",
+  "notes": "Author's macro builds a delimited list of integers between two endpoints. Bundle defines the macro and exercises three call styles: default (whitespace-delimited 1..5), evens-only with by= and from=, and a comma-delimited variant. The /des=\"...\" description option from the original was omitted because Jenner does not yet recognize it."
+}

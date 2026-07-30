@@ -1,0 +1,8 @@
+{
+  "bundle": "t001_getfileextension",
+  "source_file": "getFileExtension.sas",
+  "source_blob_sha": "23062239f44f1e1829658afc919d29b437e3ee71",
+  "source_commit": "e68c00adb91e69a7f62a4982e04b344e0587a230",
+  "tier": "real_data",
+  "notes": "Author's macro is a one-line %qscan(-1, '.') wrapper. Bundle defines the macro and exercises it on a handful of typical paths (Unix CSV, plain PDF, SAS source, and a multi-dot tar.gz). The /des=\"...\" option from the original was omitted because Jenner does not yet recognize that macro modifier."
+}
