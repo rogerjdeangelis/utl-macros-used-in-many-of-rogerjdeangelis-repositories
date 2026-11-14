@@ -3,10 +3,9 @@
    )/des="execute powershell script";
 run;
   %local pth;
-  %let pth=%sysfunc(pathname(work));
-
-  options noxwait noxsync;
-  filename rut pipe "powershell.exe -executionpolicy bypass -file &pth/powershell_resolve.ps1";
+  %let pth=%sysfunc(pathname(workx);
+  filename rut pipe 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "d:\wpswrkx\powershell_resolve.ps1" 2>&1';
+  *filename rut pipe "powershell.exe -executionpolicy bypass -file &pth/powershell_resolve.ps1";
 run;quit;
   run;quit;
   data _null_;
